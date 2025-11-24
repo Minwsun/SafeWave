@@ -851,13 +851,23 @@ const SafeWaveApp = () => {
       <div className="relative h-full w-full">
         <div ref={mapContainerRef} className="absolute inset-0 bg-black" />
 
-        <button
-          onClick={() => setIsDashboardOpen(!isDashboardOpen)}
-          className="absolute top-6 left-6 z-30 bg-[#0b0f16]/80 backdrop-blur border border-white/15 text-white text-xs font-semibold px-4 py-2 rounded-2xl shadow-lg hover:bg-[#121726] flex items-center gap-2"
-        >
-          <Menu size={14} className="text-blue-400" />
-          {isDashboardOpen ? 'Ẩn dashboard' : 'Mở dashboard'}
-        </button>
+        {isDashboardOpen ? (
+          <button
+            onClick={() => setIsDashboardOpen(false)}
+            className="absolute top-6 left-6 z-30 bg-[#0b0f16]/80 backdrop-blur border border-white/15 text-white text-xs font-semibold px-4 py-2 rounded-2xl shadow-lg hover:bg-[#121726] flex items-center gap-2"
+          >
+            <Menu size={14} className="text-blue-400" />
+            Ẩn dashboard
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsDashboardOpen(true)}
+            className="absolute top-6 left-6 z-30 bg-[#0b0f16]/80 backdrop-blur border border-white/15 text-white text-xs font-semibold px-4 py-2 rounded-2xl shadow-lg hover:bg-[#121726] flex items-center gap-2"
+          >
+            <Menu size={14} className="text-blue-400" />
+            Mở dashboard
+          </button>
+        )}
 
         <div
           className={`absolute top-24 left-12 bottom-6 w-[380px] transition-all duration-300 ${
