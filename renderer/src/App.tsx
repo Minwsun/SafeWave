@@ -847,14 +847,17 @@ const SafeWaveApp = () => {
         <div ref={mapContainerRef} className="absolute inset-0 bg-black" />
 
         {isDashboardOpen ? (
-          <button
-            onClick={() => setIsDashboardOpen(false)}
-            className="absolute top-6 z-30 bg-[#0b0f16]/80 backdrop-blur border border-white/15 text-white text-xs font-semibold px-3 py-2 rounded-2xl shadow-lg hover:bg-[#121726] flex items-center gap-2"
-            style={{ left: DASHBOARD_OFFSET }}
-            aria-label="Ẩn dashboard"
+          <div
+            className="absolute top-6 left-12 w-[360px] z-30 flex justify-end pointer-events-none"
           >
-            <X size={14} className="text-blue-400" />
-          </button>
+            <button
+              onClick={() => setIsDashboardOpen(false)}
+              className="bg-white/10 border border-white/20 text-white rounded-2xl p-2 hover:bg-white/20 transition pointer-events-auto"
+              aria-label="Ẩn dashboard"
+            >
+              <X size={14} />
+            </button>
+          </div>
         ) : (
           <button
             onClick={() => setIsDashboardOpen(true)}
