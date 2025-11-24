@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import maplibregl, { type ExpressionSpecification, type LayerSpecification, type Map as MapLibreInstance, type StyleSpecification } from 'maplibre-gl';
+import maplibregl, { type ExpressionSpecification, type Map as MapLibreInstance, type StyleSpecification } from 'maplibre-gl';
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
@@ -71,7 +71,7 @@ interface RiskZone {
   coordinates: [number, number][][];
 }
 
-const VIETNAM_PROVINCES_URL = 'https://raw.githubusercontent.com/ao-do/vietnam-geojson/master/vietnam.geojson';
+const VIETNAM_PROVINCES_URL = '/data/vietnam-provinces.geojson';
 const RIVERS_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_rivers_lake_centerlines.geojson';
 
 const MAP_STYLE = {
@@ -389,16 +389,6 @@ const SafeWaveApp = () => {
         tileSize: 256
       });
       map.setTerrain({ source: 'terrain', exaggeration: 2.5 });
-
-      map.addLayer({
-        id: 'sky',
-        type: 'sky',
-        paint: {
-          'sky-type': 'atmosphere',
-          'sky-atmosphere-sun': [0.0, 90.0],
-          'sky-atmosphere-sun-intensity': 15
-        }
-      } as unknown as LayerSpecification);
 
       map.addSource('vietnam-provinces', {
         type: 'geojson',
