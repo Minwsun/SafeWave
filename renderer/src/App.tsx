@@ -247,6 +247,14 @@ const buildRiskGeoJson = (zones: RiskZone[]): FeatureCollection<Polygon> => ({
   )
 });
 
+const DASHBOARD_WIDTH = 380;
+const DASHBOARD_OFFSET = 12;
+const DASHBOARD_GAP = 5;
+const COLLAPSED_CARD_LEFT = 80;
+const AI_PANEL_WIDTH = 360;
+const SCREEN_MARGIN = 24;
+const PANEL_GAP = 16;
+
 const SafeWaveApp = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreInstance | null>(null);
@@ -310,7 +318,12 @@ const SafeWaveApp = () => {
   ]);
 
   const riskGeoJson = useMemo(() => buildRiskGeoJson(riskZones), [riskZones]);
-  const layerAnchorClass = isAIConsoleOpen ? 'right-[26rem]' : 'right-6';
+  const trackingCardLeft = isDashboardOpen
+    ? DASHBOARD_OFFSET + DASHBOARD_WIDTH + DASHBOARD_GAP
+    : COLLAPSED_CARD_LEFT;
+  const layerRightOffset = isAIConsoleOpen
+    ? AI_PANEL_WIDTH + SCREEN_MARGIN + PANEL_GAP
+    : SCREEN_MARGIN;
   useEffect(() => {
     let cancelled = false;
 
@@ -1020,14 +1033,18 @@ const SafeWaveApp = () => {
         {!isLayerManagerOpen && (
           <button
             onClick={() => setIsLayerManagerOpen(true)}
-            className={`absolute top-6 ${layerAnchorClass} z-20 bg-[#1A1C23]/90 backdrop-blur border border-gray-800 rounded-2xl p-3 text-white hover:bg-white/10 transition shadow-2xl`}
+            className="absolute top-6 z-20 bg-[#1A1C23]/90 backdrop-blur border border-gray-800 rounded-2xl p-3 text-white hover:bg-white/10 transition shadow-2xl"
+            style={{ right: layerRightOffset }}
           >
             <Layers size={20} className="text-blue-400" />
           </button>
         )}
 
         {isLayerManagerOpen && (
-          <div className={`absolute top-6 ${layerAnchorClass} z-30 w-72 bg-[#111217]/95 backdrop-blur border border-gray-800 rounded-3xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto custom-scrollbar animate-in fade-in duration-300`}>
+          <div
+            className="absolute top-6 z-30 w-72 bg-[#111217]/95 backdrop-blur border border-gray-800 rounded-3xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto custom-scrollbar animate-in fade-in duration-300"
+            style={{ right: layerRightOffset }}
+          >
             <div className="flex items-center justify-between border-b border-gray-800 pb-2 mb-3">
               <h4 className="text-[11px] uppercase tracking-[0.3em] text-gray-500 flex items-center gap-2">
                 <Layers size={12} />
@@ -1131,7 +1148,10 @@ const SafeWaveApp = () => {
         )}
 
         {isAIConsoleOpen ? (
-          <div className="absolute top-6 right-6 z-40 w-[360px] transition-all duration-300">
+          <div
+            className="absolute top-6 z-40 w-[360px] transition-all duration-300"
+            style={{ right: SCREEN_MARGIN }}
+          >
             <div className="bg-[#0b0f16]/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden">
               <div className="p-4 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1237,7 +1257,8 @@ const SafeWaveApp = () => {
         ) : (
           <button
             onClick={() => setIsAIConsoleOpen(true)}
-            className="absolute top-6 right-6 z-30 bg-[#0b0f16]/70 backdrop-blur border border-white/10 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg hover:bg-[#121726]"
+            className="absolute top-6 z-30 bg-[#0b0f16]/70 backdrop-blur border border-white/10 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg hover:bg-[#121726]"
+            style={{ right: SCREEN_MARGIN }}
           >
             <span className="inline-flex items-center gap-2">
               <ShieldCheck size={14} className="text-blue-400" />
@@ -1248,7 +1269,7 @@ const SafeWaveApp = () => {
 
         <div
           className="absolute top-6 z-20 max-w-sm transition-all duration-300"
-          style={{ left: isDashboardOpen ? 420 : 80 }}
+          style={{ left: trackingCardLeft }}
         >
           <div className="bg-white/5 backdrop-blur-lg border border-white/30 rounded-2xl p-4 shadow-2xl">
             <div className="flex items-center justify-between text-[10px] uppercase text-gray-100">
