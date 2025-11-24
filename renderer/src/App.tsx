@@ -248,7 +248,7 @@ const buildRiskGeoJson = (zones: RiskZone[]): FeatureCollection<Polygon> => ({
 
 const DASHBOARD_OFFSET = 12;
 const DASHBOARD_WIDTH = 360;
-const TRACKING_CARD_GAP = 30;
+const TRACKING_CARD_GAP = 20;
 const COLLAPSED_CARD_LEFT = 80;
 const AI_PANEL_WIDTH = 360;
 const AI_TOGGLE_WIDTH = 120;
@@ -849,11 +849,11 @@ const SafeWaveApp = () => {
         {isDashboardOpen ? (
           <button
             onClick={() => setIsDashboardOpen(false)}
-            className="absolute top-6 z-30 bg-[#0b0f16]/80 backdrop-blur border border-white/15 text-white text-xs font-semibold px-4 py-2 rounded-2xl shadow-lg hover:bg-[#121726] flex items-center gap-2"
+            className="absolute top-6 z-30 bg-[#0b0f16]/80 backdrop-blur border border-white/15 text-white text-xs font-semibold px-3 py-2 rounded-2xl shadow-lg hover:bg-[#121726] flex items-center gap-2"
             style={{ left: DASHBOARD_OFFSET }}
+            aria-label="Ẩn dashboard"
           >
-            <Menu size={14} className="text-blue-400" />
-            Ẩn dashboard
+            <X size={14} className="text-blue-400" />
           </button>
         ) : (
           <button
