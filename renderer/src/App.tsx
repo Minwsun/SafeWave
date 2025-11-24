@@ -142,18 +142,23 @@ const deriveRiskFromPrecip = (value: number): RiskLevel => {
   return 'LOW';
 };
 
-const buildProvinceExpression = (riskMap: ProvinceRiskMap): ExpressionSpecification => {
+const buildProvinceExpression = (riskMap: ProvinceRiskMap): ExpressionSpecification | string => {
+  const entries = Object.entries(riskMap);
+  if (entries.length === 0) {
+    return 'rgba(59, 130, 246, 0.1)';
+  }
+
   const provinceStops: (string | number | ExpressionSpecification)[] = [];
-  Object.entries(riskMap).forEach(([provinceName, risk]) => {
+  entries.forEach(([provinceName, risk]) => {
     provinceStops.push(provinceName, getRiskColor(risk));
   });
 
-  return ([
+  return [
     'match',
     ['get', 'Name'],
     ...provinceStops,
     'rgba(59, 130, 246, 0.1)'
-  ] as unknown) as ExpressionSpecification;
+  ] as ExpressionSpecification;
 };
 
 const MOCK_CHARTS: Record<string, ChartConfig> = {
