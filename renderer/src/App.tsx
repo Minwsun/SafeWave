@@ -860,12 +860,12 @@ const SafeWaveApp = () => {
         </button>
 
         <div
-          className={`absolute top-6 left-12 bottom-6 w-[380px] transition-all duration-300 ${
+          className={`absolute top-24 left-12 bottom-6 w-[380px] transition-all duration-300 ${
             isDashboardOpen ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 -translate-x-4 pointer-events-none'
           }`}
         >
           <div className="h-full bg-[#111217]/95 backdrop-blur-xl border border-gray-800/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
               <div className="bg-[#151823]/80 border border-gray-800 rounded-2xl p-4 space-y-4">
                 <div
                   className="relative rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-900/30 via-[#1E2028] to-transparent p-4 overflow-hidden cursor-pointer group"
@@ -914,7 +914,7 @@ const SafeWaveApp = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="bg-[#1E2028]/70 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-white/5 transition" onClick={() => setSelectedMetric('TEMP')}>
                     <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
                       <Thermometer size={14} className="text-orange-400" />
@@ -956,7 +956,7 @@ const SafeWaveApp = () => {
                   Thủy văn
                 </header>
 
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('RIVER')}>
                     <p className="text-[10px] text-gray-400 flex items-center gap-1">
                       <TrendingUp size={10} />
