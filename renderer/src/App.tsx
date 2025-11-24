@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import maplibregl, { type Map as MapLibreInstance, type StyleSpecification } from 'maplibre-gl';
+import maplibregl, { type ExpressionSpecification, type LayerSpecification, type Map as MapLibreInstance, type StyleSpecification } from 'maplibre-gl';
 import type { Feature, FeatureCollection, Polygon } from 'geojson';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
@@ -72,7 +72,10 @@ interface RiskZone {
   coordinates: [number, number][][];
 }
 
-const MAP_STYLE: StyleSpecification = {
+const VIETNAM_PROVINCES_URL = 'https://raw.githubusercontent.com/ao-do/vietnam-geojson/master/vietnam.geojson';
+const RIVERS_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_rivers_lake_centerlines.geojson';
+
+const MAP_STYLE = {
   version: 8,
   sources: {
     osm: {
@@ -95,10 +98,15 @@ const MAP_STYLE: StyleSpecification = {
       id: 'osm-layer',
       type: 'raster',
       source: 'osm',
-      paint: { 'raster-opacity': 0.9 }
+      paint: { 'raster-opacity': 1 }
     }
-  ]
-};
+  ],
+  fog: {
+    range: [0.5, 10],
+    color: '#0B0C10',
+    'horizon-blend': 0.1
+  }
+} as StyleSpecification;
 
 const getRiskColor = (level: RiskLevel) => {
   switch (level) {
@@ -114,6 +122,16 @@ const getRiskColor = (level: RiskLevel) => {
       return '#3B82F6';
   }
 };
+
+const MOCK_PROVINCE_RISK: Record<string, RiskLevel> = {
+  'Da Nang': 'ALERT',
+  'Quang Nam': 'HIGH',
+  'Thua Thien - Hue': 'MEDIUM',
+  'Ha Noi': 'LOW',
+  'Ho Chi Minh': 'MEDIUM'
+};
+
+const getRiskColorHex = (level: RiskLevel) => getRiskColor(level);
 
 const MOCK_CHARTS: Record<string, ChartConfig> = {
   WIND: { title: 'Tốc độ gió (24h qua)', unit: 'km/h', data: [10, 12, 11, 13, 15, 18, 16, 25, 35, 42], thresholds: [15, 25, 40] },
@@ -232,9 +250,9 @@ const SafeWaveApp = () => {
   });
 
   const [dashboardInfo, setDashboardInfo] = useState({
-    location: 'Biển Đông',
-    coordinates: '16.5000, 108.3000',
-    status: 'Tracking Storm'
+    location: 'Vietnam',
+    coordinates: '-',
+    status: 'Monitoring'
   });
 
   const [activeStorm] = useState({
@@ -275,10 +293,11 @@ const SafeWaveApp = () => {
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: MAP_STYLE,
-      center: [108.2, 15.8],
-      zoom: 5.5,
-      pitch: 0,
-      bearing: 0,
+      center: [108.2, 16.0],
+      zoom: 6,
+      pitch: 60,
+      bearing: -10,
+      maxPitch: 85,
       hash: false,
       attributionControl: false
     });
@@ -295,7 +314,72 @@ const SafeWaveApp = () => {
         encoding: 'terrarium',
         tileSize: 256
       });
-      map.setTerrain({ source: 'terrain', exaggeration: 2.0 });
+      map.setTerrain({ source: 'terrain', exaggeration: 2.5 });
+
+      map.addLayer({
+        id: 'sky',
+        type: 'sky',
+        paint: {
+          'sky-type': 'atmosphere',
+          'sky-atmosphere-sun': [0.0, 90.0],
+          'sky-atmosphere-sun-intensity': 15
+        }
+      } as unknown as LayerSpecification);
+
+      map.addSource('vietnam-provinces', {
+        type: 'geojson',
+        data: VIETNAM_PROVINCES_URL
+      });
+
+      const provinceStops: (string | ExpressionSpecification)[] = [];
+      Object.entries(MOCK_PROVINCE_RISK).forEach(([provinceName, risk]) => {
+        provinceStops.push(provinceName, getRiskColorHex(risk));
+      });
+      const provinceMatchExpression = [
+        'match',
+        ['get', 'Name'],
+        ...provinceStops,
+        'rgba(59, 130, 246, 0.1)'
+      ] as ExpressionSpecification;
+
+      map.addLayer({
+        id: 'provinces-fill',
+        type: 'fill',
+        source: 'vietnam-provinces',
+        paint: {
+          'fill-color': provinceMatchExpression,
+          'fill-opacity': 0.6,
+          'fill-outline-color': '#ffffff'
+        }
+      });
+
+      map.addLayer({
+        id: 'provinces-outline',
+        type: 'line',
+        source: 'vietnam-provinces',
+        paint: { 'line-color': '#ffffff', 'line-width': 1, 'line-opacity': 0.5 }
+      });
+
+      map.addSource('rivers', {
+        type: 'geojson',
+        data: RIVERS_URL
+      });
+
+      map.addLayer({
+        id: 'river-lines',
+        type: 'line',
+        source: 'rivers',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+          visibility: 'none'
+        },
+        paint: {
+          'line-color': '#06B6D4',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1, 10, 3, 15, 8],
+          'line-opacity': 0.8
+        }
+      });
 
       map.addSource('risk-polygons', {
         type: 'geojson',
@@ -433,28 +517,6 @@ const SafeWaveApp = () => {
         layout: { visibility: 'none' }
       });
 
-      map.addSource('river-data', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: [
-            {
-              type: 'Feature',
-              properties: {},
-              geometry: { type: 'LineString', coordinates: [[105.8, 21.0], [106.0, 20.8], [106.5, 20.5]] }
-            }
-          ]
-        }
-      });
-
-      map.addLayer({
-        id: 'river-lines',
-        type: 'line',
-        source: 'river-data',
-        paint: { 'line-color': '#38BDF8', 'line-width': 3 },
-        layout: { visibility: 'none' }
-      });
-
       map.addSource('water-data', {
         type: 'geojson',
         data: {
@@ -480,6 +542,32 @@ const SafeWaveApp = () => {
         const coordsText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         setInputLocation(coordsText);
         setDashboardInfo({ location: 'Vị trí đã chọn', coordinates: coordsText, status: 'Selected Region' });
+      });
+
+      map.on('click', 'provinces-fill', (e) => {
+        if (!e.features || e.features.length === 0) return;
+        const feature = e.features[0];
+        const name = (feature.properties?.Name as string) || 'Unknown';
+        const risk = MOCK_PROVINCE_RISK[name] || 'LOW';
+
+        setDashboardInfo({
+          location: name,
+          coordinates: `${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,
+          status: `Risk Level: ${risk}`
+        });
+
+        new maplibregl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`<div style="color:#0f172a"><strong>${name}</strong><br/>Risk: ${risk}</div>`)
+          .addTo(map);
+      });
+
+      map.on('mouseenter', 'provinces-fill', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'provinces-fill', () => {
+        map.getCanvas().style.cursor = '';
       });
 
       setIsLoaded(true);
@@ -509,7 +597,7 @@ const SafeWaveApp = () => {
     };
 
     if (layers.elevation) {
-      map.setTerrain({ source: 'terrain', exaggeration: 2.0 });
+      map.setTerrain({ source: 'terrain', exaggeration: 2.5 });
     } else {
       map.setTerrain(null);
     }
