@@ -1272,12 +1272,12 @@ const SafeWaveApp = () => {
         )}
 
         <div
-          className="absolute bottom-6 z-20 max-w-sm transition-all duration-300"
+          className="absolute bottom-6 z-20 max-w-sm transition-all duration-300 text-white drop-shadow-lg"
           style={{
             left: isDashboardOpen ? DASHBOARD_OFFSET + DASHBOARD_WIDTH + TRACKING_CARD_GAP : COLLAPSED_CARD_LEFT
           }}
         >
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-white">
+          <div className="rounded-2xl p-4 bg-transparent">
             <div className="flex items-center justify-between text-[10px] uppercase text-gray-100">
               <span className="flex items-center gap-2 tracking-[0.3em]">
                 <Target size={12} />
