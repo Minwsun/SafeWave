@@ -1246,9 +1246,12 @@ const SafeWaveApp = () => {
           </button>
         )}
 
-        <div className="absolute bottom-6 right-8 z-20 max-w-sm">
-          <div className="bg-white/5 backdrop-blur-md border border-white/30 rounded-2xl p-4 shadow-2xl">
-            <div className="flex items-center justify-between text-[10px] uppercase text-gray-200">
+        <div
+          className="absolute top-6 z-20 max-w-sm transition-all duration-300"
+          style={{ left: isDashboardOpen ? 420 : 80 }}
+        >
+          <div className="bg-white/5 backdrop-blur-lg border border-white/30 rounded-2xl p-4 shadow-2xl">
+            <div className="flex items-center justify-between text-[10px] uppercase text-gray-100">
               <span className="flex items-center gap-2 tracking-[0.3em]">
                 <Target size={12} />
                 Đang theo dõi
@@ -1256,7 +1259,7 @@ const SafeWaveApp = () => {
               <span className="text-red-300 font-bold bg-red-900/40 px-2 py-0.5 rounded-full">LIVE</span>
             </div>
             <p className="text-xl font-semibold text-white mt-2">{dashboardInfo.location}</p>
-            <p className="text-[12px] font-mono text-gray-100">{dashboardInfo.coordinates}</p>
+            <p className="text-[12px] font-mono text-gray-200">{dashboardInfo.coordinates}</p>
 
             <button
               onClick={handleAnalyze}
