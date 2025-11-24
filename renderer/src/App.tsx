@@ -7,8 +7,6 @@ import {
   ArrowUp,
   Bot,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Droplets,
   Eye,
@@ -18,6 +16,7 @@ import {
   LineChart,
   Map as MapIcon,
   Mountain,
+  Menu,
   MoveRight,
   Navigation,
   ShieldAlert,
@@ -852,28 +851,13 @@ const SafeWaveApp = () => {
       <div className="relative h-full w-full">
         <div ref={mapContainerRef} className="absolute inset-0 bg-black" />
 
-        <div className="absolute top-6 left-6 z-40">
-          <div className="flex items-center gap-3 bg-[#0b0f16]/85 backdrop-blur border border-white/10 rounded-r-2xl rounded-l-lg px-4 py-3 shadow-2xl">
-            <button
-              onClick={() => setIsDashboardOpen(!isDashboardOpen)}
-              className="bg-blue-500/20 border border-blue-400/50 rounded-full p-2 text-blue-300 hover:bg-blue-500/30 transition"
-              aria-label="Toggle dashboard"
-            >
-              {isDashboardOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-            </button>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Dashboard</p>
-              <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                <Activity size={14} className="text-blue-400" />
-                SafeWave OS
-              </div>
-              <p className="text-[11px] text-gray-400 flex items-center gap-1">
-                <Tornado size={12} className="text-red-400" />
-                Live Cyclone Tracking
-              </p>
-            </div>
-          </div>
-        </div>
+        <button
+          onClick={() => setIsDashboardOpen(!isDashboardOpen)}
+          className="absolute top-6 left-6 z-30 bg-[#0b0f16]/80 backdrop-blur border border-white/15 text-white text-xs font-semibold px-4 py-2 rounded-2xl shadow-lg hover:bg-[#121726] flex items-center gap-2"
+        >
+          <Menu size={14} className="text-blue-400" />
+          {isDashboardOpen ? 'Ẩn dashboard' : 'Mở dashboard'}
+        </button>
 
         <div
           className={`absolute top-6 left-12 bottom-6 w-[380px] transition-all duration-300 ${
@@ -882,32 +866,37 @@ const SafeWaveApp = () => {
         >
           <div className="h-full bg-[#111217]/95 backdrop-blur-xl border border-gray-800/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-              <div className="bg-gradient-to-br from-red-900/30 to-transparent rounded-2xl p-4 border border-red-500/30 relative overflow-hidden cursor-pointer group" onClick={() => setSelectedMetric('SURGE')}>
-                <div className="absolute top-0 right-0 p-2 opacity-20">
-                  <Tornado size={64} />
-                </div>
-                <div className="flex items-center gap-2 text-xs text-red-400 font-semibold uppercase tracking-widest">
-                  <span className="w-2 h-2 rounded-full bg-red-500 storm-pulse" />
-                  Hiện tượng: Bão
-                </div>
-                <h3 className="text-2xl font-bold text-white mt-2">{activeStorm.name}</h3>
-                <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
-                  <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
-                    <span className="text-gray-400">Gió</span>
-                    <span className="text-white font-semibold">{activeStorm.speed}</span>
+              <div className="bg-[#151823]/80 border border-gray-800 rounded-2xl p-4 space-y-4">
+                <div
+                  className="relative rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-900/30 via-[#1E2028] to-transparent p-4 overflow-hidden cursor-pointer group"
+                  onClick={() => setSelectedMetric('SURGE')}
+                >
+                  <div className="absolute top-0 right-0 p-2 opacity-20">
+                    <Tornado size={64} />
                   </div>
-                  <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
-                    <span className="text-gray-400">Hướng</span>
-                    <span className="text-white font-semibold flex items-center gap-1">
-                      <Navigation size={12} className="-rotate-45" />
-                      {activeStorm.direction}
-                    </span>
+                  <div className="flex items-center gap-2 text-xs text-red-400 font-semibold uppercase tracking-widest">
+                    <span className="w-2 h-2 rounded-full bg-red-500 storm-pulse" />
+                    Hiện tượng: Bão
                   </div>
+                  <h3 className="text-2xl font-bold text-white mt-2">{activeStorm.name}</h3>
+                  <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
+                    <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                      <span className="text-gray-400">Gió</span>
+                      <span className="text-white font-semibold">{activeStorm.speed}</span>
+                    </div>
+                    <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                      <span className="text-gray-400">Hướng</span>
+                      <span className="text-white font-semibold flex items-center gap-1">
+                        <Navigation size={12} className="-rotate-45" />
+                        {activeStorm.direction}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-400 italic mt-3">Nhấn để xem chi tiết</p>
                 </div>
-                <p className="text-[10px] text-gray-500 italic absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition">Nhấn để xem chi tiết</p>
               </div>
 
-              <section className="space-y-3">
+              <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
                 <header className="text-xs font-semibold text-yellow-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
                   <Wind size={14} />
                   Khí tượng
@@ -961,57 +950,55 @@ const SafeWaveApp = () => {
                 </div>
               </section>
 
-              <section className="space-y-3">
+              <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
                 <header className="text-xs font-semibold text-blue-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
                   <Droplets size={14} />
                   Thủy văn
                 </header>
 
-                <div className="bg-[#1E2028]/70 p-4 rounded-2xl border border-gray-800 space-y-3">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="bg-black/20 rounded-xl p-3 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('RIVER')}>
-                      <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                        <TrendingUp size={10} />
-                        Hướng sông
-                      </p>
-                      <p className="text-white font-semibold mt-1">Đông Nam</p>
-                    </div>
-                    <div className="bg-black/20 rounded-xl p-3 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('FLOW')}>
-                      <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                        <Waves size={10} />
-                        Dòng chảy
-                      </p>
-                      <p className="text-white font-semibold mt-1">1.2 m/s</p>
-                    </div>
-                    <div className="bg-black/20 rounded-xl p-3 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('SURGE')}>
-                      <p className="text-[10px] text-gray-400 flex items-center gap-1 text-red-400">
-                        <ArrowUp size={10} />
-                        Nước dâng
-                      </p>
-                      <p className="text-red-400 font-semibold mt-1">+0.8m</p>
-                    </div>
-                    <div className="bg-black/20 rounded-xl p-3 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('TIDE')}>
-                      <p className="text-[10px] text-gray-400 flex items-center gap-1 text-purple-400">
-                        <Waves size={10} />
-                        Triều cường
-                      </p>
-                      <p className="text-purple-400 font-semibold mt-1">Đỉnh triều</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('RIVER')}>
+                    <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                      <TrendingUp size={10} />
+                      Hướng sông
+                    </p>
+                    <p className="text-white font-semibold mt-1">Đông Nam</p>
                   </div>
+                  <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('FLOW')}>
+                    <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                      <Waves size={10} />
+                      Dòng chảy
+                    </p>
+                    <p className="text-white font-semibold mt-1">1.2 m/s</p>
+                  </div>
+                  <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('SURGE')}>
+                    <p className="text-[10px] text-gray-400 flex items-center gap-1 text-red-400">
+                      <ArrowUp size={10} />
+                      Nước dâng
+                    </p>
+                    <p className="text-red-400 font-semibold mt-1">+0.8m</p>
+                  </div>
+                  <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('TIDE')}>
+                    <p className="text-[10px] text-gray-400 flex items-center gap-1 text-purple-400">
+                      <Waves size={10} />
+                      Triều cường
+                    </p>
+                    <p className="text-purple-400 font-semibold mt-1">Đỉnh triều</p>
+                  </div>
+                </div>
 
-                  <div className="pt-3 border-t border-gray-800">
-                    <div className="flex items-center justify-between text-xs text-gray-400 mb-2 cursor-pointer" onClick={() => setSelectedMetric('SEALEVEL')}>
-                      <span>Mực nước biển TB</span>
-                      <span className="text-blue-400 font-semibold">+15cm</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-800 rounded-full">
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: '65%' }} />
-                    </div>
+                <div className="pt-3 border-t border-gray-800">
+                  <div className="flex items-center justify-between text-xs text-gray-400 mb-2 cursor-pointer" onClick={() => setSelectedMetric('SEALEVEL')}>
+                    <span>Mực nước biển TB</span>
+                    <span className="text-blue-400 font-semibold">+15cm</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-800 rounded-full">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: '65%' }} />
                   </div>
                 </div>
               </section>
 
-              <section className="space-y-3 pb-4">
+              <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
                 <header className="text-xs font-semibold text-green-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
                   <Mountain size={14} />
                   Địa hình
