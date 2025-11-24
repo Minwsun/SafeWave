@@ -1,0 +1,27 @@
+{
+  "name": "safewave",
+  "version": "0.1.0",
+  "description": "SafeWave desktop hazard intelligence console",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:electron\"",
+    "dev:renderer": "npm run dev --prefix renderer",
+    "dev:electron": "wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron electron/main.js",
+    "build": "npm run build --prefix renderer",
+    "start": "cross-env NODE_ENV=production electron electron/main.js"
+  },
+  "keywords": [
+    "electron",
+    "react",
+    "maplibre",
+    "safewave"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.3",
+    "wait-on": "^9.0.3"
+  }
+}

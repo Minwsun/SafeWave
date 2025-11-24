@@ -1,0 +1,8 @@
+node_modules/
+renderer/node_modules/
+dist/
+renderer/dist/
+.DS_Store
+npm-debug.log*
+*.log
+
