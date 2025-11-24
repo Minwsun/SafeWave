@@ -1263,7 +1263,7 @@ const SafeWaveApp = () => {
         ) : (
           <button
             onClick={() => setIsAIConsoleOpen(true)}
-            className="absolute top-6 z-30 bg-[#0b0f16]/70 backdrop-blur border border-white/10 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg hover:bg-[#121726]"
+            className="absolute top-6 z-30 bg-[#0b0f16]/80 backdrop-blur border border-white/15 text-white text-xs font-semibold px-4 py-2 rounded-2xl shadow-lg hover:bg-[#121726]"
             style={{ right: SCREEN_MARGIN }}
           >
             <span className="inline-flex items-center gap-2">
