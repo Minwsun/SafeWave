@@ -852,13 +852,28 @@ const SafeWaveApp = () => {
       <div className="relative h-full w-full">
         <div ref={mapContainerRef} className="absolute inset-0 bg-black" />
 
-        <button
-          onClick={() => setIsDashboardOpen(!isDashboardOpen)}
-          className="absolute top-1/2 left-4 -translate-y-1/2 z-30 bg-[#1A1C23]/80 backdrop-blur border border-gray-800 rounded-full p-2 text-blue-400 hover:bg-[#1f2230] transition"
-          aria-label="Toggle dashboard"
-        >
-          {isDashboardOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-        </button>
+        <div className="absolute top-6 left-6 z-40">
+          <div className="flex items-center gap-3 bg-[#0b0f16]/85 backdrop-blur border border-white/10 rounded-r-2xl rounded-l-lg px-4 py-3 shadow-2xl">
+            <button
+              onClick={() => setIsDashboardOpen(!isDashboardOpen)}
+              className="bg-blue-500/20 border border-blue-400/50 rounded-full p-2 text-blue-300 hover:bg-blue-500/30 transition"
+              aria-label="Toggle dashboard"
+            >
+              {isDashboardOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+            </button>
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Dashboard</p>
+              <div className="flex items-center gap-2 text-white font-semibold text-sm">
+                <Activity size={14} className="text-blue-400" />
+                SafeWave OS
+              </div>
+              <p className="text-[11px] text-gray-400 flex items-center gap-1">
+                <Tornado size={12} className="text-red-400" />
+                Live Cyclone Tracking
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div
           className={`absolute top-6 left-12 bottom-6 w-[380px] transition-all duration-300 ${
@@ -866,20 +881,6 @@ const SafeWaveApp = () => {
           }`}
         >
           <div className="h-full bg-[#111217]/95 backdrop-blur-xl border border-gray-800/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-[#151823]/80">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500 flex items-center gap-2">
-                  <Activity size={14} className="text-blue-500" />
-                  SafeWave OS
-                </p>
-                <h2 className="text-xl font-bold text-white mt-1 flex items-center gap-2">
-                  <Tornado size={16} className="text-red-400" />
-                  Live Cyclone Tracking
-                </h2>
-              </div>
-              <span className="text-[10px] bg-red-900/40 text-red-400 px-2 py-1 rounded-full animate-pulse">LIVE</span>
-            </div>
-
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
               <div className="bg-gradient-to-br from-red-900/30 to-transparent rounded-2xl p-4 border border-red-500/30 relative overflow-hidden cursor-pointer group" onClick={() => setSelectedMetric('SURGE')}>
                 <div className="absolute top-0 right-0 p-2 opacity-20">
@@ -1168,7 +1169,7 @@ const SafeWaveApp = () => {
                 </div>
                 <button onClick={() => setIsAIConsoleOpen(false)} className="text-gray-500 hover:text-white transition">
                   <X size={16} />
-                </button>
+        </button>
               </div>
 
               <div className="p-4 border-b border-white/5">
