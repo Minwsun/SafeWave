@@ -1269,10 +1269,10 @@ const SafeWaveApp = () => {
         )}
 
         <div
-          className="absolute top-6 z-20 max-w-sm transition-all duration-300"
+          className="absolute bottom-6 left-12 z-20 max-w-sm transition-all duration-300"
           style={{ left: trackingCardLeft }}
         >
-          <div className="bg-white/5 backdrop-blur-lg border border-white/30 rounded-2xl p-4 shadow-2xl">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-white">
             <div className="flex items-center justify-between text-[10px] uppercase text-gray-100">
               <span className="flex items-center gap-2 tracking-[0.3em]">
                 <Target size={12} />
@@ -1280,13 +1280,13 @@ const SafeWaveApp = () => {
               </span>
               <span className="text-red-300 font-bold bg-red-900/40 px-2 py-0.5 rounded-full">LIVE</span>
             </div>
-            <p className="text-xl font-semibold text-white mt-2">{dashboardInfo.location}</p>
+            <p className="text-xl font-semibold mt-2">{dashboardInfo.location}</p>
             <p className="text-[12px] font-mono text-gray-200">{dashboardInfo.coordinates}</p>
 
             <button
               onClick={handleAnalyze}
               disabled={analyzing || !inputLocation}
-              className="mt-3 w-full flex items-center justify-center gap-2 text-xs bg-blue-500/20 border border-blue-300/40 text-blue-100 rounded-xl py-2 hover:bg-blue-500/30 disabled:opacity-50 transition"
+              className="mt-3 w-full flex items-center justify-center gap-2 text-xs bg-blue-500/20 text-blue-100 rounded-xl py-2 hover:bg-blue-500/30 disabled:opacity-50 transition"
             >
               {analyzing ? <Activity className="animate-spin" size={14} /> : <Bot size={14} />}
               {analyzing ? 'AI đang phân tích...' : 'Xem đánh giá từ AI'}
