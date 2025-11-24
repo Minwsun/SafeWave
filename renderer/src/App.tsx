@@ -251,7 +251,9 @@ const DASHBOARD_WIDTH = 380;
 const DASHBOARD_OFFSET = 12;
 const DASHBOARD_GAP = 5;
 const COLLAPSED_CARD_LEFT = 80;
+const TRACKING_CARD_SHIFT = 10;
 const AI_PANEL_WIDTH = 360;
+const AI_TOGGLE_WIDTH = 120;
 const SCREEN_MARGIN = 24;
 const PANEL_GAP = 16;
 
@@ -318,12 +320,15 @@ const SafeWaveApp = () => {
   ]);
 
   const riskGeoJson = useMemo(() => buildRiskGeoJson(riskZones), [riskZones]);
-  const trackingCardLeft = isDashboardOpen
-    ? DASHBOARD_OFFSET + DASHBOARD_WIDTH + DASHBOARD_GAP
-    : COLLAPSED_CARD_LEFT;
-  const layerRightOffset = isAIConsoleOpen
-    ? AI_PANEL_WIDTH + SCREEN_MARGIN + PANEL_GAP
-    : SCREEN_MARGIN;
+  const trackingCardLeft =
+    (isDashboardOpen
+      ? DASHBOARD_OFFSET + DASHBOARD_WIDTH + DASHBOARD_GAP
+      : COLLAPSED_CARD_LEFT) + TRACKING_CARD_SHIFT;
+  const layerRightOffset =
+    SCREEN_MARGIN +
+    (isAIConsoleOpen
+      ? AI_PANEL_WIDTH + PANEL_GAP
+      : AI_TOGGLE_WIDTH + PANEL_GAP);
   useEffect(() => {
     let cancelled = false;
 
