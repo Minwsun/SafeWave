@@ -869,13 +869,10 @@ const SafeWaveApp = () => {
           </button>
         )}
 
-        <div
-          className={`absolute top-24 left-12 bottom-6 w-[380px] transition-all duration-300 ${
-            isDashboardOpen ? 'opacity-100 translate-x-0 pointer-events-auto' : 'opacity-0 -translate-x-4 pointer-events-none'
-          }`}
-        >
-          <div className="h-full bg-[#111217]/95 backdrop-blur-xl border border-gray-800/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+        {isDashboardOpen && (
+          <div className="absolute top-24 left-12 bottom-6 w-[380px] z-20">
+            <div className="h-full bg-[#111217]/95 backdrop-blur-xl border border-gray-800/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+              <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
               <div className="bg-[#151823]/80 border border-gray-800 rounded-2xl p-4 space-y-4">
                 <div
                   className="relative rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-900/30 via-[#1E2028] to-transparent p-4 overflow-hidden cursor-pointer group"
@@ -1029,9 +1026,10 @@ const SafeWaveApp = () => {
                   </span>
                 </div>
               </section>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {!isLayerManagerOpen && (
           <button
