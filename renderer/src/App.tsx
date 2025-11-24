@@ -123,15 +123,39 @@ const getRiskColor = (level: RiskLevel) => {
   }
 };
 
-const MOCK_PROVINCE_RISK: Record<string, RiskLevel> = {
-  'Da Nang': 'ALERT',
-  'Quang Nam': 'HIGH',
-  'Thua Thien - Hue': 'MEDIUM',
-  'Ha Noi': 'LOW',
-  'Ho Chi Minh': 'MEDIUM'
+const PROVINCE_COORDS: Record<string, { lat: number; lon: number }> = {
+  'Ha Noi': { lat: 21.0278, lon: 105.8342 },
+  'Da Nang': { lat: 16.0544, lon: 108.2022 },
+  'Quang Nam': { lat: 15.5394, lon: 108.0191 },
+  'Thua Thien - Hue': { lat: 16.4674, lon: 107.5905 },
+  'Ho Chi Minh': { lat: 10.8231, lon: 106.6297 },
+  'Hai Phong': { lat: 20.8449, lon: 106.6881 },
+  'Can Tho': { lat: 10.0452, lon: 105.7469 },
+  'Khanh Hoa': { lat: 12.2388, lon: 109.1967 }
 };
 
-const getRiskColorHex = (level: RiskLevel) => getRiskColor(level);
+type ProvinceRiskMap = Record<string, RiskLevel>;
+
+const deriveRiskFromPrecip = (value: number): RiskLevel => {
+  if (value >= 20) return 'ALERT';
+  if (value >= 10) return 'HIGH';
+  if (value >= 3) return 'MEDIUM';
+  return 'LOW';
+};
+
+const buildProvinceExpression = (riskMap: ProvinceRiskMap): ExpressionSpecification => {
+  const provinceStops: (string | number | ExpressionSpecification)[] = [];
+  Object.entries(riskMap).forEach(([provinceName, risk]) => {
+    provinceStops.push(provinceName, getRiskColor(risk));
+  });
+
+  return ([
+    'match',
+    ['get', 'Name'],
+    ...provinceStops,
+    'rgba(59, 130, 246, 0.1)'
+  ] as unknown) as ExpressionSpecification;
+};
 
 const MOCK_CHARTS: Record<string, ChartConfig> = {
   WIND: { title: 'Tốc độ gió (24h qua)', unit: 'km/h', data: [10, 12, 11, 13, 15, 18, 16, 25, 35, 42], thresholds: [15, 25, 40] },
@@ -226,6 +250,7 @@ const buildRiskGeoJson = (zones: RiskZone[]): FeatureCollection<Polygon> => ({
 const SafeWaveApp = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreInstance | null>(null);
+  const provinceRiskRef = useRef<ProvinceRiskMap>({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [inputLocation, setInputLocation] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
@@ -234,6 +259,7 @@ const SafeWaveApp = () => {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey | null>(null);
   const [isAIConsoleOpen, setIsAIConsoleOpen] = useState(true);
   const [riskZones, setRiskZones] = useState<RiskZone[]>(BASE_RISK_ZONES);
+  const [provinceRisk, setProvinceRisk] = useState<ProvinceRiskMap>({});
 
   const [layers, setLayers] = useState<LayerVisibility>({
     storm: true,
@@ -285,6 +311,42 @@ const SafeWaveApp = () => {
 
   const riskGeoJson = useMemo(() => buildRiskGeoJson(riskZones), [riskZones]);
   const layerAnchorClass = isAIConsoleOpen ? 'right-[26rem]' : 'right-6';
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchProvinceRisk = async () => {
+      try {
+        const entries = await Promise.all(
+          Object.entries(PROVINCE_COORDS).map(async ([name, coords]) => {
+            try {
+              const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=precipitation`;
+              const response = await fetch(url);
+              const data = await response.json();
+              const precipitation: number[] = data?.hourly?.precipitation ?? [];
+              const maxPrecip = precipitation.reduce((acc: number, value: number) => Math.max(acc, value ?? 0), 0);
+              return [name, deriveRiskFromPrecip(maxPrecip)] as const;
+            } catch {
+              return [name, 'LOW' as RiskLevel] as const;
+            }
+          })
+        );
+
+        if (!cancelled) {
+          const riskMap = Object.fromEntries(entries) as ProvinceRiskMap;
+          provinceRiskRef.current = riskMap;
+          setProvinceRisk(riskMap);
+        }
+      } catch (error) {
+        console.error('Failed to fetch province risks', error);
+      }
+    };
+
+    fetchProvinceRisk();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -331,23 +393,12 @@ const SafeWaveApp = () => {
         data: VIETNAM_PROVINCES_URL
       });
 
-      const provinceStops: (string | ExpressionSpecification)[] = [];
-      Object.entries(MOCK_PROVINCE_RISK).forEach(([provinceName, risk]) => {
-        provinceStops.push(provinceName, getRiskColorHex(risk));
-      });
-      const provinceMatchExpression = [
-        'match',
-        ['get', 'Name'],
-        ...provinceStops,
-        'rgba(59, 130, 246, 0.1)'
-      ] as ExpressionSpecification;
-
       map.addLayer({
         id: 'provinces-fill',
         type: 'fill',
         source: 'vietnam-provinces',
         paint: {
-          'fill-color': provinceMatchExpression,
+          'fill-color': buildProvinceExpression(provinceRiskRef.current),
           'fill-opacity': 0.6,
           'fill-outline-color': '#ffffff'
         }
@@ -548,7 +599,7 @@ const SafeWaveApp = () => {
         if (!e.features || e.features.length === 0) return;
         const feature = e.features[0];
         const name = (feature.properties?.Name as string) || 'Unknown';
-        const risk = MOCK_PROVINCE_RISK[name] || 'LOW';
+        const risk = provinceRiskRef.current[name] || 'LOW';
 
         setDashboardInfo({
           location: name,
@@ -586,6 +637,18 @@ const SafeWaveApp = () => {
       source.setData(riskGeoJson as GeoJSON.GeoJSON);
     }
   }, [riskGeoJson, isLoaded]);
+
+  useEffect(() => {
+    if (!mapRef.current || !isLoaded) return;
+    const map = mapRef.current;
+    if (map.getLayer('provinces-fill')) {
+      map.setPaintProperty('provinces-fill', 'fill-color', buildProvinceExpression(provinceRisk));
+    }
+  }, [provinceRisk, isLoaded]);
+
+  useEffect(() => {
+    provinceRiskRef.current = provinceRisk;
+  }, [provinceRisk]);
 
   useEffect(() => {
     if (!mapRef.current || !isLoaded) return;
@@ -1183,22 +1246,22 @@ const SafeWaveApp = () => {
           </button>
         )}
 
-        <div className="absolute bottom-6 left-14 z-20">
-          <div className="bg-[#0B0C10]/70 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl max-w-sm">
-            <div className="flex items-center justify-between text-[10px] uppercase text-gray-400">
+        <div className="absolute bottom-6 right-8 z-20 max-w-sm">
+          <div className="bg-white/5 backdrop-blur-md border border-white/30 rounded-2xl p-4 shadow-2xl">
+            <div className="flex items-center justify-between text-[10px] uppercase text-gray-200">
               <span className="flex items-center gap-2 tracking-[0.3em]">
                 <Target size={12} />
                 Đang theo dõi
               </span>
-              <span className="text-red-400 font-bold bg-red-900/30 px-2 py-0.5 rounded-full">LIVE</span>
+              <span className="text-red-300 font-bold bg-red-900/40 px-2 py-0.5 rounded-full">LIVE</span>
             </div>
             <p className="text-xl font-semibold text-white mt-2">{dashboardInfo.location}</p>
-            <p className="text-[12px] font-mono text-gray-400">{dashboardInfo.coordinates}</p>
+            <p className="text-[12px] font-mono text-gray-100">{dashboardInfo.coordinates}</p>
 
             <button
               onClick={handleAnalyze}
               disabled={analyzing || !inputLocation}
-              className="mt-3 w-full flex items-center justify-center gap-2 text-xs bg-blue-900/30 border border-blue-500/40 text-blue-200 rounded-xl py-2 hover:bg-blue-900/60 disabled:opacity-50 transition"
+              className="mt-3 w-full flex items-center justify-center gap-2 text-xs bg-blue-500/20 border border-blue-300/40 text-blue-100 rounded-xl py-2 hover:bg-blue-500/30 disabled:opacity-50 transition"
             >
               {analyzing ? <Activity className="animate-spin" size={14} /> : <Bot size={14} />}
               {analyzing ? 'AI đang phân tích...' : 'Xem đánh giá từ AI'}
