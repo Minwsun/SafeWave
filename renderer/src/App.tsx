@@ -873,159 +873,159 @@ const SafeWaveApp = () => {
           <div className="absolute top-24 left-12 bottom-6 w-[380px] z-20">
             <div className="h-full bg-[#111217]/95 backdrop-blur-xl border border-gray-800/60 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
               <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
-              <div className="bg-[#151823]/80 border border-gray-800 rounded-2xl p-4 space-y-4">
-                <div
-                  className="relative rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-900/30 via-[#1E2028] to-transparent p-4 overflow-hidden cursor-pointer group"
-                  onClick={() => setSelectedMetric('SURGE')}
-                >
-                  <div className="absolute top-0 right-0 p-2 opacity-20">
-                    <Tornado size={64} />
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-red-400 font-semibold uppercase tracking-widest">
-                    <span className="w-2 h-2 rounded-full bg-red-500 storm-pulse" />
-                    Hiện tượng: Bão
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mt-2">{activeStorm.name}</h3>
-                  <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
-                    <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
-                      <span className="text-gray-400">Gió</span>
-                      <span className="text-white font-semibold">{activeStorm.speed}</span>
+                <div className="bg-[#151823]/80 border border-gray-800 rounded-2xl p-4 space-y-4">
+                  <div
+                    className="relative rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-900/30 via-[#1E2028] to-transparent p-4 overflow-hidden cursor-pointer group"
+                    onClick={() => setSelectedMetric('SURGE')}
+                  >
+                    <div className="absolute top-0 right-0 p-2 opacity-20">
+                      <Tornado size={64} />
                     </div>
-                    <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
-                      <span className="text-gray-400">Hướng</span>
-                      <span className="text-white font-semibold flex items-center gap-1">
-                        <Navigation size={12} className="-rotate-45" />
-                        {activeStorm.direction}
-                      </span>
+                    <div className="flex items-center gap-2 text-xs text-red-400 font-semibold uppercase tracking-widest">
+                      <span className="w-2 h-2 rounded-full bg-red-500 storm-pulse" />
+                      Hiện tượng: Bão
                     </div>
-                  </div>
-                  <p className="text-[10px] text-gray-400 italic mt-3">Nhấn để xem chi tiết</p>
-                </div>
-              </div>
-
-              <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
-                <header className="text-xs font-semibold text-yellow-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
-                  <Wind size={14} />
-                  Khí tượng
-                </header>
-
-                <div className="bg-[#1E2028]/70 p-4 rounded-2xl border border-gray-800 flex items-center justify-between cursor-pointer hover:bg-white/5 transition" onClick={() => setSelectedMetric('WIND')}>
-                  <div>
-                    <p className="text-[11px] text-gray-400">Hướng gió chủ đạo</p>
-                    <p className="text-xl font-semibold text-white">Đông Bắc</p>
-                    <p className="text-[10px] text-cyan-400 mt-1">Tốc độ: 15 km/h</p>
-                  </div>
-                  <div className="w-16 h-16 rounded-full border border-gray-700 relative flex items-center justify-center bg-black/20">
-                    <Navigation size={20} className="text-cyan-400 rotate-45" />
-                    <div className="absolute inset-0 border border-cyan-500/30 rounded-full animate-pulse" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-[#1E2028]/70 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-white/5 transition" onClick={() => setSelectedMetric('TEMP')}>
-                    <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
-                      <Thermometer size={14} className="text-orange-400" />
-                      Nhiệt độ
+                    <h3 className="text-2xl font-bold text-white mt-2">{activeStorm.name}</h3>
+                    <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
+                      <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                        <span className="text-gray-400">Gió</span>
+                        <span className="text-white font-semibold">{activeStorm.speed}</span>
+                      </div>
+                      <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                        <span className="text-gray-400">Hướng</span>
+                        <span className="text-white font-semibold flex items-center gap-1">
+                          <Navigation size={12} className="-rotate-45" />
+                          {activeStorm.direction}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xl font-semibold text-white">28°C</p>
-                  </div>
-                  <div className="bg-[#1E2028]/70 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-white/5 transition" onClick={() => setSelectedMetric('PRESSURE')}>
-                    <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
-                      <Gauge size={14} className="text-purple-400" />
-                      Áp suất
-                    </div>
-                    <p className="text-xl font-semibold text-white">996 hPa</p>
+                    <p className="text-[10px] text-gray-400 italic mt-3">Nhấn để xem chi tiết</p>
                   </div>
                 </div>
 
-                <div className="bg-[#1E2028]/70 p-3 rounded-2xl border border-gray-800 space-y-2">
-                  <div className="flex justify-between items-center text-xs cursor-pointer hover:bg-white/5 p-2 rounded" onClick={() => setSelectedMetric('HOT_AIR')}>
-                    <span className="text-gray-400 flex items-center gap-2">
-                      <ThermometerSun size={14} className="text-orange-400" />
-                      Không khí nóng
-                    </span>
-                    <span className="text-white font-semibold">Tây Nam (Yếu)</span>
-                  </div>
-                  <div className="h-px bg-gray-800" />
-                  <div className="flex justify-between items-center text-xs cursor-pointer hover:bg-white/5 p-2 rounded" onClick={() => setSelectedMetric('COLD_AIR')}>
-                    <span className="text-gray-400 flex items-center gap-2">
-                      <ThermometerSnowflake size={14} className="text-cyan-400" />
-                      Không khí lạnh
-                    </span>
-                    <span className="text-gray-500">Không phát hiện</span>
-                  </div>
-                </div>
-              </section>
+                <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
+                  <header className="text-xs font-semibold text-yellow-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
+                    <Wind size={14} />
+                    Khí tượng
+                  </header>
 
-              <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
-                <header className="text-xs font-semibold text-blue-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
-                  <Droplets size={14} />
-                  Thủy văn
-                </header>
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('RIVER')}>
-                    <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                      <TrendingUp size={10} />
-                      Hướng sông
-                    </p>
-                    <p className="text-white font-semibold mt-1">Đông Nam</p>
-                  </div>
-                  <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('FLOW')}>
-                    <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                      <Waves size={10} />
-                      Dòng chảy
-                    </p>
-                    <p className="text-white font-semibold mt-1">1.2 m/s</p>
-                  </div>
-                  <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('SURGE')}>
-                    <p className="text-[10px] text-gray-400 flex items-center gap-1 text-red-400">
-                      <ArrowUp size={10} />
-                      Nước dâng
-                    </p>
-                    <p className="text-red-400 font-semibold mt-1">+0.8m</p>
-                  </div>
-                  <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('TIDE')}>
-                    <p className="text-[10px] text-gray-400 flex items-center gap-1 text-purple-400">
-                      <Waves size={10} />
-                      Triều cường
-                    </p>
-                    <p className="text-purple-400 font-semibold mt-1">Đỉnh triều</p>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-gray-800">
-                  <div className="flex items-center justify-between text-xs text-gray-400 mb-2 cursor-pointer" onClick={() => setSelectedMetric('SEALEVEL')}>
-                    <span>Mực nước biển TB</span>
-                    <span className="text-blue-400 font-semibold">+15cm</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-gray-800 rounded-full">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: '65%' }} />
-                  </div>
-                </div>
-              </section>
-
-              <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
-                <header className="text-xs font-semibold text-green-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
-                  <Mountain size={14} />
-                  Địa hình
-                </header>
-
-                <div className="bg-[#1E2028]/70 p-4 rounded-2xl border border-gray-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-500/20 p-3 rounded-2xl">
-                      <Mountain size={18} className="text-green-400" />
-                    </div>
+                  <div className="bg-[#1E2028]/70 p-4 rounded-2xl border border-gray-800 flex items-center justify-between cursor-pointer hover:bg-white/5 transition" onClick={() => setSelectedMetric('WIND')}>
                     <div>
-                      <p className="text-[11px] text-gray-400">Độ cao trung bình</p>
-                      <p className="text-lg font-semibold text-white">450m</p>
+                      <p className="text-[11px] text-gray-400">Hướng gió chủ đạo</p>
+                      <p className="text-xl font-semibold text-white">Đông Bắc</p>
+                      <p className="text-[10px] text-cyan-400 mt-1">Tốc độ: 15 km/h</p>
+                    </div>
+                    <div className="w-16 h-16 rounded-full border border-gray-700 relative flex items-center justify-center bg-black/20">
+                      <Navigation size={20} className="text-cyan-400 rotate-45" />
+                      <div className="absolute inset-0 border border-cyan-500/30 rounded-full animate-pulse" />
                     </div>
                   </div>
-                  <span className="text-[10px] bg-green-900/30 text-green-400 px-3 py-1 rounded-full border border-green-500/30">
-                    3D Terrain ON
-                  </span>
-                </div>
-              </section>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-[#1E2028]/70 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-white/5 transition" onClick={() => setSelectedMetric('TEMP')}>
+                      <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+                        <Thermometer size={14} className="text-orange-400" />
+                        Nhiệt độ
+                      </div>
+                      <p className="text-xl font-semibold text-white">28°C</p>
+                    </div>
+                    <div className="bg-[#1E2028]/70 p-3 rounded-2xl border border-gray-800 cursor-pointer hover:bg-white/5 transition" onClick={() => setSelectedMetric('PRESSURE')}>
+                      <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+                        <Gauge size={14} className="text-purple-400" />
+                        Áp suất
+                      </div>
+                      <p className="text-xl font-semibold text-white">996 hPa</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#1E2028]/70 p-3 rounded-2xl border border-gray-800 space-y-2">
+                    <div className="flex justify-between items-center text-xs cursor-pointer hover:bg-white/5 p-2 rounded" onClick={() => setSelectedMetric('HOT_AIR')}>
+                      <span className="text-gray-400 flex items-center gap-2">
+                        <ThermometerSun size={14} className="text-orange-400" />
+                        Không khí nóng
+                      </span>
+                      <span className="text-white font-semibold">Tây Nam (Yếu)</span>
+                    </div>
+                    <div className="h-px bg-gray-800" />
+                    <div className="flex justify-between items-center text-xs cursor-pointer hover:bg-white/5 p-2 rounded" onClick={() => setSelectedMetric('COLD_AIR')}>
+                      <span className="text-gray-400 flex items-center gap-2">
+                        <ThermometerSnowflake size={14} className="text-cyan-400" />
+                        Không khí lạnh
+                      </span>
+                      <span className="text-gray-500">Không phát hiện</span>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
+                  <header className="text-xs font-semibold text-blue-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
+                    <Droplets size={14} />
+                    Thủy văn
+                  </header>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('RIVER')}>
+                      <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <TrendingUp size={10} />
+                        Hướng sông
+                      </p>
+                      <p className="text-white font-semibold mt-1">Đông Nam</p>
+                    </div>
+                    <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('FLOW')}>
+                      <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <Waves size={10} />
+                        Dòng chảy
+                      </p>
+                      <p className="text-white font-semibold mt-1">1.2 m/s</p>
+                    </div>
+                    <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('SURGE')}>
+                      <p className="text-[10px] text-gray-400 flex items-center gap-1 text-red-400">
+                        <ArrowUp size={10} />
+                        Nước dâng
+                      </p>
+                      <p className="text-red-400 font-semibold mt-1">+0.8m</p>
+                    </div>
+                    <div className="bg-[#1E2028]/70 rounded-xl p-3 border border-gray-800 hover:bg-white/5 cursor-pointer" onClick={() => setSelectedMetric('TIDE')}>
+                      <p className="text-[10px] text-gray-400 flex items-center gap-1 text-purple-400">
+                        <Waves size={10} />
+                        Triều cường
+                      </p>
+                      <p className="text-purple-400 font-semibold mt-1">Đỉnh triều</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-800">
+                    <div className="flex items-center justify-between text-xs text-gray-400 mb-2 cursor-pointer" onClick={() => setSelectedMetric('SEALEVEL')}>
+                      <span>Mực nước biển TB</span>
+                      <span className="text-blue-400 font-semibold">+15cm</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-800 rounded-full">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: '65%' }} />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-4 bg-[#151823]/80 border border-gray-800 rounded-2xl p-4">
+                  <header className="text-xs font-semibold text-green-500 uppercase flex items-center gap-2 border-b border-gray-800 pb-2">
+                    <Mountain size={14} />
+                    Địa hình
+                  </header>
+
+                  <div className="bg-[#1E2028]/70 p-4 rounded-2xl border border-gray-800 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-green-500/20 p-3 rounded-2xl">
+                        <Mountain size={18} className="text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-gray-400">Độ cao trung bình</p>
+                        <p className="text-lg font-semibold text-white">450m</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] bg-green-900/30 text-green-400 px-3 py-1 rounded-full border border-green-500/30">
+                      3D Terrain ON
+                    </span>
+                  </div>
+                </section>
               </div>
             </div>
           </div>
