@@ -23,5 +23,9 @@
     "cross-env": "^10.1.0",
     "electron": "^39.2.3",
     "wait-on": "^9.0.3"
+  },
+  "dependencies": {
+    "lucide-react": "^0.554.0",
+    "maplibre-gl": "^5.13.0"
   }
 }
