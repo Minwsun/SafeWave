@@ -74,31 +74,59 @@ interface RiskZone {
 const VIETNAM_PROVINCES_URL = '/data/vietnam-provinces.geojson';
 const RIVERS_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_rivers_lake_centerlines.geojson';
 
+
 const MAP_STYLE = {
   version: 8,
   sources: {
-    osm: {
+    // 1. Lớp Địa hình, Sông suối, Đường xá (Base)
+    'esri-topo': {
       type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+      ],
       tileSize: 256,
-      attribution: '© OpenStreetMap Contributors'
+      attribution: 'Tiles © Esri'
+    },
+    // 2. Lớp Nhãn địa danh & Biên giới chi tiết (Overlay - nằm đè lên mọi thứ)
+    'esri-labels': {
+      type: 'raster',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
+      ],
+      tileSize: 256
     },
     'terrain-source': {
       type: 'raster-dem',
       tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
       encoding: 'terrarium',
       tileSize: 256,
-      maxzoom: 15,
+      maxzoom: 12,
       minzoom: 1
     }
   },
   layers: [
     {
-      id: 'osm-layer',
+      id: 'base-layer',
       type: 'raster',
-      source: 'osm',
-      paint: { 'raster-opacity': 1 }
+      source: 'esri-topo',
+      paint: {
+        'raster-opacity': 1,
+        'raster-saturation': 0.1 // Giảm bão hòa nhẹ để heatmap màu mè nổi hơn
+      }
+    },
+    {
+      id: 'terrain-halo', // Giữ lại đổ bóng đồi núi để tăng chiều sâu 3D
+      type: 'hillshade',
+      source: 'terrain-source',
+      paint: {
+        'hillshade-exaggeration': 0.5,
+        'hillshade-shadow-color': '#000000',
+        'hillshade-highlight-color': '#ffffff',
+        'hillshade-accent-color': '#000000',
+        'hillshade-opacity': 0.3
+      }
     }
+    // Lớp 'esri-labels' sẽ được add thủ công sau cùng trong useEffect để đảm bảo nó nằm trên Heatmap
   ],
   fog: {
     range: [0.5, 10],
@@ -106,6 +134,7 @@ const MAP_STYLE = {
     'horizon-blend': 0.1
   }
 } as StyleSpecification;
+
 
 const getRiskColor = (level: RiskLevel) => {
   switch (level) {
@@ -395,7 +424,8 @@ const SafeWaveApp = () => {
       });
       map.setTerrain({ source: 'terrain', exaggeration: 2.5 });
 
-      map.addSource('vietnam-provinces', {
+      // XÓA các layer provinces vì Esri Topo Map đã có sẵn địa danh và biên giới
+      /* map.addSource('vietnam-provinces', {
         type: 'geojson',
         data: VIETNAM_PROVINCES_URL
       });
@@ -416,7 +446,7 @@ const SafeWaveApp = () => {
         type: 'line',
         source: 'vietnam-provinces',
         paint: { 'line-color': '#ffffff', 'line-width': 1, 'line-opacity': 0.5 }
-      });
+      }); */
 
       map.addSource('rivers', {
         type: 'geojson',
@@ -628,6 +658,18 @@ const SafeWaveApp = () => {
         map.getCanvas().style.cursor = '';
       });
 
+      // --- QUAN TRỌNG: Đưa lớp nhãn địa danh lên TRÊN CÙNG ---
+      // Add layer này SAU KHI add các heatmap để tên địa điểm đè lên màu mưa/gió
+      map.addLayer({
+        id: 'labels-overlay',
+        type: 'raster',
+        source: 'esri-labels',
+        paint: {
+          'raster-opacity': 1.0
+        }
+      });
+
+      console.log('SafeWave map ready - Esri Topo Edition with Labels Overlay');
       setIsLoaded(true);
     });
 
@@ -748,7 +790,7 @@ const SafeWaveApp = () => {
     const chartConfig = MOCK_CHARTS[selectedMetric];
     const maxVal = Math.max(...chartConfig.data, ...(chartConfig.thresholds || [])) * 1.1;
 
-  return (
+    return (
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className="bg-[#1A1C23] border border-gray-700 rounded-2xl shadow-2xl w-full max-w-xl p-6 relative">
           <button
@@ -763,7 +805,7 @@ const SafeWaveApp = () => {
             <div className="p-2 rounded-lg bg-gray-900 border border-gray-700">
               <LineChart size={26} className="text-blue-500" />
             </div>
-      <div>
+            <div>
               <h3 className="text-lg font-bold text-white">{chartConfig.title}</h3>
               <p className="text-xs text-gray-400">Biểu đồ điểm quan trắc</p>
             </div>
@@ -920,14 +962,14 @@ const SafeWaveApp = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 backdrop-blur p-3 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition" onClick={() => setSelectedMetric('TEMP')}>
+                    <div className="bg-white/5 backdrop-blur p-3 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition" onClick={() => setSelectedMetric('TEMP')}>
                       <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
                         <Thermometer size={14} className="text-orange-400" />
                         Nhiệt độ
                       </div>
                       <p className="text-xl font-semibold text-white">28°C</p>
                     </div>
-                  <div className="bg-white/5 backdrop-blur p-3 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition" onClick={() => setSelectedMetric('PRESSURE')}>
+                    <div className="bg-white/5 backdrop-blur p-3 rounded-2xl border border-white/10 cursor-pointer hover:bg-white/10 transition" onClick={() => setSelectedMetric('PRESSURE')}>
                       <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
                         <Gauge size={14} className="text-purple-400" />
                         Áp suất
@@ -1162,7 +1204,7 @@ const SafeWaveApp = () => {
                 </div>
                 <button onClick={() => setIsAIConsoleOpen(false)} className="text-gray-500 hover:text-white transition">
                   <X size={16} />
-        </button>
+                </button>
               </div>
 
               <div className="p-4 border-b border-white/5">
@@ -1267,30 +1309,117 @@ const SafeWaveApp = () => {
         )}
 
         <div
-          className="absolute bottom-6 z-20 max-w-sm transition-all duration-300 text-white drop-shadow-lg"
-          style={{
-            left: isDashboardOpen ? DASHBOARD_OFFSET + DASHBOARD_WIDTH + TRACKING_CARD_GAP : COLLAPSED_CARD_LEFT
-          }}
+          className="absolute top-6 left-6 z-20 w-72 transition-all duration-300"
         >
-          <div className="rounded-2xl p-4 bg-transparent">
-            <div className="flex items-center justify-between text-[10px] uppercase text-gray-100">
-              <span className="flex items-center gap-2 tracking-[0.3em]">
-                <Target size={12} />
-                Đang theo dõi
-              </span>
-              <span className="text-red-300 font-bold bg-red-900/40 px-2 py-0.5 rounded-full">LIVE</span>
+          <div className="bg-[#0b0f16]/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] overflow-hidden">
+            {/* Header */}
+            <div className="p-4 border-b border-white/10">
+              <div className="flex items-center gap-2 text-red-400 text-[10px] font-bold tracking-[0.2em] uppercase">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                QUAN TRẮC THỰC TIẾP
+              </div>
+              <h2 className="text-xl font-bold text-white mt-2">{dashboardInfo.location.split(',')[0] || 'Đà Nẵng'}</h2>
+              <p className="text-sm text-gray-400">{dashboardInfo.location.includes(',') ? dashboardInfo.location.split(',').slice(1).join(',').trim() : 'Việt Nam'}</p>
+              <p className="text-[11px] text-gray-500 mt-1 font-mono">{dashboardInfo.coordinates}</p>
             </div>
-            <p className="text-xl font-semibold mt-2">{dashboardInfo.location}</p>
-            <p className="text-[12px] font-mono text-gray-200">{dashboardInfo.coordinates}</p>
 
-            <button
-              onClick={handleAnalyze}
-              disabled={analyzing || !inputLocation}
-              className="mt-3 w-full flex items-center justify-center gap-2 text-xs bg-blue-500/20 text-blue-100 rounded-xl py-2 hover:bg-blue-500/30 disabled:opacity-50 transition"
-            >
-              {analyzing ? <Activity className="animate-spin" size={14} /> : <Bot size={14} />}
-              {analyzing ? 'AI đang phân tích...' : 'Xem đánh giá từ AI'}
-            </button>
+            {/* Weather Section */}
+            <div className="p-4 border-b border-white/5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-gray-500 uppercase tracking-wider">Hướng gió tại điểm</span>
+                <Navigation size={14} className="text-blue-400" />
+              </div>
+              <div className="text-4xl font-bold text-white">10°</div>
+              <div className="text-xs text-gray-400">Tốc độ: 9.9 km/h</div>
+
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 text-[10px] text-orange-400 mb-2">
+                    <Thermometer size={12} />
+                    Nhiệt độ
+                  </div>
+                  <div className="text-2xl font-bold text-white">22.5°C</div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 text-[10px] text-purple-400 mb-2">
+                    <Gauge size={12} />
+                    Áp suất
+                  </div>
+                  <div className="text-2xl font-bold text-white">1015 <span className="text-sm text-gray-400">hPa</span></div>
+                </div>
+              </div>
+
+              {/* Temperature Range */}
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="bg-gradient-to-br from-orange-500/10 to-transparent rounded-xl p-2 border border-orange-500/20">
+                  <div className="flex items-center gap-1 text-[9px] text-orange-400 mb-1">
+                    <ThermometerSun size={10} />
+                    Nóng nhất 24h
+                  </div>
+                  <div className="text-base font-semibold text-orange-300">24.6°C</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-cyan-500/10 to-transparent rounded-xl p-2 border border-cyan-500/20">
+                  <div className="flex items-center gap-1 text-[9px] text-cyan-400 mb-1">
+                    <ThermometerSnowflake size={10} />
+                    Thấp nhất 24h
+                  </div>
+                  <div className="text-base font-semibold text-cyan-300">20.6°C</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hydrology Section */}
+            <div className="p-4 space-y-2">
+              <div className="flex items-center gap-2 text-[10px] text-blue-400 uppercase tracking-wider font-bold mb-3">
+                <Droplets size={12} />
+                THỦY VĂN
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 rounded-xl p-2 border border-white/10">
+                  <div className="flex items-center gap-1 text-[9px] text-gray-400 mb-1">
+                    <Droplets size={10} />
+                    Mưa tốc thời
+                  </div>
+                  <div className="text-base font-semibold text-white">0.5 <span className="text-xs text-gray-400">mm/h</span></div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-2 border border-white/10">
+                  <div className="flex items-center gap-1 text-[9px] text-gray-400 mb-1">
+                    <Droplets size={10} />
+                    Độ ẩm
+                  </div>
+                  <div className="text-base font-semibold text-white">95 <span className="text-xs text-gray-400">%</span></div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-2 border border-white/10">
+                  <div className="flex items-center gap-1 text-[9px] text-gray-400 mb-1">
+                    <Waves size={10} />
+                    Sóng biển
+                  </div>
+                  <div className="text-base font-semibold text-white">0.64 <span className="text-xs text-gray-400">m</span></div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-2 border border-white/10">
+                  <div className="flex items-center gap-1 text-[9px] text-gray-400 mb-1">
+                    <Waves size={10} />
+                    Mực nước lúy
+                  </div>
+                  <div className="text-base font-semibold text-white">38.2 <span className="text-xs text-gray-400">mm</span></div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                className="mt-4 w-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-100 text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2"
+              >
+                <LineChart size={14} />
+                Chuẩn đoán
+              </button>
+            </div>
           </div>
         </div>
       </div>
