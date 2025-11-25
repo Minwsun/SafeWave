@@ -6,32 +6,35 @@
 
 :root {
   font-family: 'Inter', 'Inter Tight', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #f8fafc; /* Màu chữ sáng */
-  background-color: #05060a; /* Màu nền tối */
+  color: #f8fafc;
+  background-color: #05060a;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-/* BẮT BUỘC: Đặt chiều cao 100% để bản đồ hiển thị */
+/* FIX BẮT BUỘC: Đặt chiều cao 100% để bản đồ hiển thị Full Màn Hình */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Ngăn cuộn trang */
+  overflow: hidden; /* Ngăn thanh cuộn thừa */
 }
 
-/* Tùy chỉnh thanh cuộn cho đẹp */
+/* Tùy chỉnh thanh cuộn (Scrollbar) */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(148, 163, 184, 0.35);
   border-radius: 999px;
