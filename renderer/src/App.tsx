@@ -741,7 +741,7 @@ const SafeWaveApp = () => {
                         <div className="flex flex-col items-center justify-center py-10 gap-4">
                             <div className="loader-spin border-t-cyan-400 border-r-cyan-400"></div>
                             <div className="text-center">
-                                <span className="text-xs font-mono text-cyan-400 animate-pulse block">AI đang tổng hợp dữ liệu...</span>
+                                <span className="text-xs font-mono text-cyan-400 animate-pulse block">Đang tổng hợp dữ liệu...</span>
                                 {markerRef.current && (
                                     <span className="text-[10px] font-mono text-gray-500 mt-1 block">
                                         {markerRef.current.getLngLat().lat.toFixed(4)}, {markerRef.current.getLngLat().lng.toFixed(4)}
