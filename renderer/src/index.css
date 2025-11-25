@@ -1,34 +1,168 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: 'Inter', 'Inter Tight', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #f8fafc;
-  background-color: #05060a;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+  /* Font chính cho giao diện */
+  --font-sans: 'Inter', 'Inter Tight', system-ui, -apple-system, sans-serif;
+  /* Font cho code/log của AI Agent */
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Màu sắc chủ đạo (Theme Dark - Deep Space) */
+  --bg-deep: #05060a;
+  --bg-panel: rgba(15, 23, 42, 0.75); /* Slate-900 mờ */
+  --border-glass: rgba(148, 163, 184, 0.15);
+  
+  /* Màu cảnh báo thiên tai (SafeWave Colors) */
+  --color-safe: #10b981;   /* Emerald-500 */
+  --color-warn: #f59e0b;   /* Amber-500 */
+  --color-danger: #ef4444; /* Red-500 */
+  --color-alert: #7f1d1d;  /* Red-900 (Deep) */
 }
 
-/* FIX BẮT BUỘC: Đặt chiều cao 100% để bản đồ hiển thị Full Màn Hình */
+/* --- CẤU HÌNH CƠ BẢN --- */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Ngăn thanh cuộn thừa */
+  overflow: hidden; /* Chặn scroll của trang, chỉ scroll trong panel */
+  background-color: var(--bg-deep);
+  color: #f8fafc;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Tùy chỉnh thanh cuộn (Scrollbar) */
+/* --- MAPLIBRE OVERRIDES (Tùy biến giao diện bản đồ) --- */
+
+/* 1. Ẩn logo MapLibre mặc định ở góc dưới (nếu muốn gọn) hoặc làm nhỏ lại */
+.maplibregl-ctrl-attrib {
+  background-color: transparent !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+  font-size: 10px !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* 2. Tùy chỉnh Popup (Khi click vào marker) cho hợp Dark Mode */
+.maplibregl-popup-content {
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-glass);
+  color: #e2e8f0;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+  font-family: var(--font-sans);
+}
+
+.maplibregl-popup-tip {
+  border-top-color: rgba(15, 23, 42, 0.95) !important;
+}
+
+.maplibregl-popup-close-button {
+  color: #94a3b8;
+  font-size: 16px;
+  padding: 4px 8px !important;
+}
+.maplibregl-popup-close-button:hover {
+  color: #fff;
+  background: transparent !important;
+}
+
+/* 3. Tùy chỉnh nút Zoom (+/-) */
+.maplibregl-ctrl-group {
+  background-color: #1e293b !important; /* Slate-800 */
+  border: 1px solid var(--border-glass) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.maplibregl-ctrl button {
+  border-bottom: 1px solid var(--border-glass) !important;
+}
+
+/* Đổi màu icon nút zoom sang trắng */
+.maplibregl-ctrl-icon {
+  filter: invert(1) brightness(2); 
+}
+
+/* --- SAFEWAVE UI COMPONENTS --- */
+
+/* Hiệu ứng kính mờ (Glassmorphism) cho Panel */
+.glass-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Text style cho AI output */
+.ai-typing-text {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+/* Hiệu ứng con trỏ nhấp nháy của AI */
+.cursor-blink::after {
+  content: '▋';
+  display: inline-block;
+  margin-left: 2px;
+  color: #38bdf8; /* Sky-400 */
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* --- TRẠNG THÁI CẢNH BÁO (RISK LEVELS) --- */
+
+/* Badge hiển thị mức độ */
+.risk-badge {
+  @apply px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+}
+
+.risk-badge.low {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.risk-badge.medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.risk-badge.high {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  animation: pulse-red 2s infinite;
+}
+
+/* Hiệu ứng nhịp tim cho cảnh báo nguy hiểm */
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* --- THANH CUỘN (SCROLLBAR) --- */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -38,4 +172,21 @@ html, body, #root {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(148, 163, 184, 0.35);
   border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.5);
+}
+
+/* --- LOADER ANIMATION --- */
+.loader-spin {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-left-color: #38bdf8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
