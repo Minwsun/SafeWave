@@ -5,11 +5,9 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  
-  /* Màu nền siêu tối */
-  --bg-deep: #020408; 
+  --bg-deep: #020408;
 }
 
 html, body, #root {
@@ -25,31 +23,21 @@ html, body, #root {
 
 /* --- UI SYSTEM: DARK NEON GLASS --- */
 
-/* 1. Lớp kính chủ đạo (Dùng cho Card, Panel) */
+/* 1. Lớp kính chủ đạo */
 .glass-card {
-  /* Nền đen trong suốt nhẹ */
-  background: rgba(5, 6, 10, 0.65); 
-  /* Hiệu ứng nhám mạnh (Frosted Glass) */
+  background: rgba(5, 6, 10, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  /* Viền siêu mỏng, phát sáng nhẹ */
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.7), /* Bóng đổ sâu */
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03); /* Inner border tạo độ nổi */
+    0 25px 50px -12px rgba(0, 0, 0, 0.8), 
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Hover effect cho card (nếu cần tương tác) */
-.glass-card-interactive:hover {
-  background: rgba(10, 15, 25, 0.75);
-  border-color: rgba(34, 211, 238, 0.3); /* Viền sáng màu Cyan */
-  box-shadow: 0 0 30px rgba(34, 211, 238, 0.05); /* Glow nhẹ */
-}
-
-/* 2. Nút bấm kính (Layer Controls) */
+/* 2. Nút bấm kính */
 .glass-btn {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(5, 6, 10, 0.6);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   color: #94a3b8;
@@ -58,38 +46,25 @@ html, body, #root {
 }
 
 .glass-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(5, 6, 10, 0.9);
   color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
-.glass-btn.active {
-  background: rgba(6, 182, 212, 0.15); /* Cyan nền */
-  border-color: rgba(34, 211, 238, 0.6); /* Cyan viền */
-  color: #22d3ee;
-  box-shadow: 0 0 15px rgba(34, 211, 238, 0.2); /* Neon Glow */
-}
-
 /* 3. Text Neon Glow */
-.text-glow {
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-}
-.text-glow-cyan {
-  text-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
-}
-.text-glow-red {
-  text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
-}
+.text-glow { text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+.text-glow-cyan { text-shadow: 0 0 15px rgba(34, 211, 238, 0.5); }
+.text-glow-red { text-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
 
-/* --- MAP COMPONENTS --- */
-
-/* Ẩn logo MapLibre */
+/* --- MAP CUSTOMIZATION --- */
 .maplibregl-ctrl-attrib { display: none !important; }
 
 /* Custom Marker Neon */
 .neon-marker-container { 
-  position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; 
+  position: relative; width: 20px; height: 20px; 
+  display: flex; align-items: center; justify-content: center; 
 }
 .neon-core { 
   width: 8px; height: 8px; background-color: #fff; border-radius: 50%; z-index: 2; 
@@ -102,21 +77,24 @@ html, body, #root {
 }
 @keyframes neon-ping { 75%, 100% { transform: scale(3); opacity: 0; } }
 
-/* Custom Popup (Dark Glass) */
-.custom-dark-popup .maplibregl-popup-content {
-  background: rgba(5, 6, 10, 0.85) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important;
-  border-radius: 16px !important;
-  padding: 16px !important;
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Loader */
+.loader-spin {
+  width: 24px; height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
-.custom-dark-popup .maplibregl-popup-tip {
-  border-top-color: rgba(5, 6, 10, 0.85) !important;
-}
-.custom-dark-popup .maplibregl-popup-close-button {
-  color: #64748b; top: 10px; right: 10px; font-size: 16px;
-}
-.custom-dark-popup .maplibregl-popup-close-button:hover {
-  color: #fff; background: none !important;
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Shimmer Animation */
+@keyframes shimmer {
+  0% { transform: translateY(100%); opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { transform: translateY(-100%); opacity: 0; }
 }
