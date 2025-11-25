@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "name": "vietnam_provinces_sample",
+  "crs": {
+    "type": "name",
+    "properties": { "name": "EPSG:4326" }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Da Nang"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [107.9, 15.8],
+            [108.4, 15.8],
+            [108.4, 16.2],
+            [107.9, 16.2],
+            [107.9, 15.8]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Quang Nam"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [107.5, 15.0],
+            [108.5, 15.0],
+            [108.5, 16.0],
+            [107.5, 16.0],
+            [107.5, 15.0]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "Name": "Thua Thien - Hue"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [107.2, 15.9],
+            [108.0, 15.9],
+            [108.0, 16.5],
+            [107.2, 16.5],
+            [107.2, 15.9]
+          ]
+        ]
+      }
+    }
+  ]
+}
+
