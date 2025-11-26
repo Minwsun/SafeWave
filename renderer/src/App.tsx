@@ -1,15 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
-import maplibregl, { type Map as MapLibreInstance, type StyleSpecification, type LngLatBoundsLike, Marker } from 'maplibre-gl';
+import maplibregl, { type Map as MapLibreInstance, type StyleSpecification, type LngLatBoundsLike, Marker, type GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   Activity, Droplets, Gauge, MapPin, 
   ShieldCheck, Sun, Wind, X, Search,
   History, AlertTriangle, Minus, LayoutDashboard,
-  RefreshCw, Maximize2, Siren, Mountain, ArrowUp, ArrowDown, Waves, Umbrella, Navigation, Info, Clock
+  RefreshCw, Maximize2, Siren, Mountain, ArrowUp, ArrowDown, Waves, Umbrella, Navigation, Info, Clock, Tornado
 } from 'lucide-react';
 
 // --- CẤU HÌNH API & DỮ LIỆU ---
-const OWM_API_KEY = import.meta.env.VITE_OWM_API_KEY || ''; 
+// Sử dụng bản đồ CartoDB Voyager để hiển thị tiếng Anh/Latin, loại bỏ chữ Trung Quốc
+const MAP_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    'carto-voyager': { 
+        type: 'raster', 
+        tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'], 
+        tileSize: 256, 
+        attribution: '&copy; CartoDB' 
+    }
+  },
+  layers: [{ 
+      id: 'carto-layer', 
+      type: 'raster', 
+      source: 'carto-voyager', 
+      minzoom: 0, 
+      maxzoom: 19,
+      paint: { 'raster-saturation': -0.8, 'raster-contrast': 0.1 } 
+  }] 
+} as StyleSpecification;
+
 const ASIA_BOUNDS: LngLatBoundsLike = [[60.0, -15.0], [150.0, 55.0]];
 
 const ADMIN_GEO_URLS = {
@@ -64,14 +84,14 @@ interface AlertItem {
   source?: 'LIVE' | 'FALLBACK';
 }
 
-// --- STRICT SCORING ENGINE (AI LOGIC - TUNED DOWN) ---
+// --- STRICT SCORING ENGINE (AI LOGIC) ---
 const clamp = (x: number, a = 0, b = 100) => Math.max(a, Math.min(b, x));
 const norm = (value: number, min: number, max: number) => {
   if (max === min) return 0;
   return clamp((value - min) / (max - min) * 100);
 };
 
-// 1. Weather Score (Đã giảm độ nhạy)
+// 1. Weather Score
 interface WeatherInputs {
     rainWindows: RainStats;
     humidity: number;
@@ -82,24 +102,20 @@ interface WeatherInputs {
 }
 
 const computeWeatherScore = ({rainWindows, humidity, soil_moisture, wind_kmh, wind_gust_kmh, pressure_hPa}: WeatherInputs) => {
-  // Giảm trọng số mưa và gió để tránh báo động giả khi trời chỉ mưa nhỏ/gió nhẹ
   const rainWeight = 0.40;
   const windWeight = 0.30;
   const humidityWeight = 0.10;
   const soilWeight = 0.10; 
   const pressureWeight = 0.10;
 
-  // Tăng ngưỡng (Thresholds) lên cao hơn: Phải mưa to hơn mới tính là nguy hiểm
   const rainScore =
-    0.30*norm(rainWindows.h1, 5, 150) +   // Mưa 1h > 5mm mới bắt đầu tính điểm
+    0.30*norm(rainWindows.h1, 5, 150) +   
     0.20*norm(rainWindows.h3, 10, 200) +  
     0.15*norm(rainWindows.h12, 20, 250) +
     0.10*norm(rainWindows.h24, 30, 350) +
     0.25*norm(rainWindows.d3, 50, 500);   
 
-  // Gió: Bắt đầu tính rủi ro từ 30km/h
   const windBase = clamp((wind_kmh - 30) / (200 - 30) * 100, 0, 100);
-  // Gió giật: Bắt đầu tính từ 50km/h
   const windGustScore = wind_gust_kmh === null ? 0 : clamp((wind_gust_kmh - 50) / (260 - 50) * 100, 0, 100);
   const windScore = Math.round(0.7 * windBase + 0.3 * windGustScore);
 
@@ -115,7 +131,6 @@ const computeWeatherScore = ({rainWindows, humidity, soil_moisture, wind_kmh, wi
     pressureWeight*pressureScore
   );
 
-  // FLOOR RULES (Nới lỏng)
   const significantRain = (rainWindows.h1 > 10 || rainWindows.h3 > 20 || rainWindows.h24 > 50);
   if (significantRain) weatherScore = Math.max(weatherScore, 30); 
   if (wind_gust_kmh && wind_gust_kmh >= 60) weatherScore = Math.max(weatherScore, 40); 
@@ -131,7 +146,6 @@ interface StormInputs {
     pressure_hPa: number;
 }
 const computeStormScore = ({d_km, wind_kmh, wind_gust_kmh, pressure_hPa}: StormInputs) => {
-    // Nếu xa hơn 800km coi như không ảnh hưởng
     if (d_km > 800) return 0;
 
     const Rmax = 250;
@@ -158,7 +172,6 @@ interface TotalRiskInputs {
 }
 
 type TerrainType = 'Đồng bằng' | 'Lòng chảo/Thung lũng' | 'Taluy dương' | 'Đỉnh đồi/Núi cao' | 'Ven sông/Suối' | 'Ven biển' | 'Chân núi';
-type SoilType = 'Đất sét bão hòa' | 'Đất pha cát rời rạc' | 'Đất bazan ngậm nước' | 'Đá vôi/Karst' | 'Đất bồi phù sa';
 
 interface RiskAnalysisResult {
     level: number; // 1-4
@@ -181,7 +194,6 @@ const computeTotalRisk = (inputs: TotalRiskInputs): { score: number, level: numb
     const gScore = computeGeologyScore({maxMag: inputs.geo.maxMag}); 
     const tScore = computeTerrainScore(inputs.terrain);
     
-    // Weights mới
     const W = { w: 0.50, s: 0.30, g: 0.10, t: 0.10 };
     
     const soilFactor = (inputs.weather.soil_moisture || 0) * 30; 
@@ -192,13 +204,11 @@ const computeTotalRisk = (inputs: TotalRiskInputs): { score: number, level: numb
     
     if (tScore > 50) total += soilFactor * 0.2; 
 
-    // CRITICAL OVERRIDE
     if (wScore >= 95 || sScore >= 90) total = Math.max(total, 85);
 
     let level = 1;
     let label: RiskLevel = 'An toàn';
 
-    // Thang điểm mới
     if (total >= 85) { level = 4; label = 'Nguy hiểm'; }
     else if (total >= 65) { level = 3; label = 'Cảnh báo'; }
     else if (total >= 35) { level = 2; label = 'Nhẹ'; }
@@ -207,14 +217,11 @@ const computeTotalRisk = (inputs: TotalRiskInputs): { score: number, level: numb
 };
 
 // 5. Text Generation Wrapper
-const calculateComplexRisk = (data: DashboardData, maxQuakeMag: number = 0): RiskAnalysisResult => {
+const calculateComplexRisk = (data: DashboardData, maxQuakeMag: number = 0, distToStorm: number = 9999): RiskAnalysisResult => {
     let terrain: TerrainType = 'Đồng bằng';
     if (data.elevation > 500) terrain = 'Đỉnh đồi/Núi cao';
     else if (data.elevation > 100) terrain = 'Chân núi';
     else if (data.elevation < 5) terrain = 'Ven biển';
-
-    // Dist to storm = 9999 (Vô cực) nếu không có dữ liệu bão
-    const distToStorm = 9999; 
 
     const result = computeTotalRisk({
         weather: {
@@ -237,7 +244,6 @@ const calculateComplexRisk = (data: DashboardData, maxQuakeMag: number = 0): Ris
 
     let causes = [];
     
-    // Chỉ báo bão nếu điểm bão cao VÀ khoảng cách gần
     if (result.factors.sScore > 50 && distToStorm < 500) {
         causes.push("Ảnh hưởng hoàn lưu bão/ATNĐ");
     }
@@ -266,14 +272,6 @@ const calculateComplexRisk = (data: DashboardData, maxQuakeMag: number = 0): Ris
     };
 };
 
-const MAP_STYLE: StyleSpecification = {
-  version: 8,
-  sources: {
-    'osm-tiles': { type: 'raster', tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, attribution: '' }
-  },
-  layers: [{ id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 19, paint: { 'raster-opacity': 1, 'raster-saturation': -0.8, 'raster-contrast': 0.1 } }] 
-} as StyleSpecification;
-
 // --- UTILS ---
 const formatHistoryTime = (timestamp: number) => {
     const now = Date.now();
@@ -291,6 +289,23 @@ const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   const dLon = (lon2-lon1) * Math.PI/180;
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+};
+
+// Hàm tạo hình tròn GeoJSON (để vẽ bán kính gió)
+const createGeoJSONCircle = (center: [number, number], radiusInKm: number, points = 64) => {
+    const coords = { latitude: center[1], longitude: center[0] };
+    const km = radiusInKm;
+    const ret = [];
+    const distanceX = km / (111.320 * Math.cos(coords.latitude * Math.PI / 180));
+    const distanceY = km / 110.574;
+    for(let i=0; i<points; i++) {
+        const theta = (i / points) * (2 * Math.PI);
+        const x = distanceX * Math.cos(theta);
+        const y = distanceY * Math.sin(theta);
+        ret.push([coords.longitude + x, coords.latitude + y]);
+    }
+    ret.push(ret[0]); 
+    return ret;
 };
 
 const clusterAlerts = (alerts: AlertItem[], thresholdKm: number = 50): AlertItem[] => {
@@ -367,6 +382,7 @@ const SafeWaveApp = () => {
   const mapRef = useRef<MapLibreInstance | null>(null);
   const markerRef = useRef<Marker | null>(null);
   const alertMarkersRef = useRef<Marker[]>([]);
+  const stormMarkersRef = useRef<Marker[]>([]); 
   
   // --- STATE SYSTEM ---
   const [inputLocation, setInputLocation] = useState('');
@@ -390,12 +406,16 @@ const SafeWaveApp = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null); 
   const [recentMaxMag, setRecentMaxMag] = useState(0);
+  const [activeStormCoords, setActiveStormCoords] = useState<[number, number] | null>(null);
 
-  // --- SYSTEM SCAN: ONLY REAL USGS DATA ---
+  // --- SYSTEM SCAN: REAL DATA ONLY ---
   const runSystemScan = async () => {
     setIsScanning(true);
     const alerts: AlertItem[] = [];
+    setActiveStormCoords(null); // Reset storm coords
+
     try {
+        // 1. Quét Động Đất (USGS Real-time)
         const now = new Date();
         const twoDaysAgo = new Date(now.getTime() - (48 * 60 * 60 * 1000));
         const usgsUrl = `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${twoDaysAgo.toISOString()}&endtime=${now.toISOString()}&minmagnitude=4.5`;
@@ -421,11 +441,117 @@ const SafeWaveApp = () => {
              });
         }
         setRecentMaxMag(maxMag);
+
+        // 2. QUÉT BÃO THỰC TẾ (GDACS - Global Disaster Alert)
+        // Lưu ý: Sử dụng corsproxy.io để vượt qua lỗi CORS trên trình duyệt
+        const gdacsUrl = 'https://corsproxy.io/?' + encodeURIComponent('https://www.gdacs.org/gdacsapi/api/events/geteventlist/MAP?eventtypes=TC');
+        
+        try {
+            const stormRes = await fetch(gdacsUrl);
+            const stormData = await stormRes.json();
+            
+            // GDACS trả về danh sách sự kiện GeoJSON
+            if (stormData && stormData.features) {
+                let foundStorm = false;
+                stormData.features.forEach((f: any) => {
+                    const props = f.properties;
+                    const coords = f.geometry.coordinates;
+                    
+                    // Lọc bão khu vực Châu Á (Thái Bình Dương / Biển Đông)
+                    if (coords[0] >= 90 && coords[0] <= 160 && coords[1] >= 0 && coords[1] <= 40) {
+                        foundStorm = true;
+                        setActiveStormCoords([coords[0], coords[1]]);
+                        
+                        // Parse mức độ rủi ro từ Class (TD, TS, Cat 1...)
+                        let level: RiskLevel = 'Cảnh báo';
+                        let wind = 60; // Default
+                        
+                        // GDACS không trả wind speed trực tiếp trong feed này, ta ước lượng qua Class
+                        // Hoặc lấy từ description nếu có
+                        if (props.severitydata?.severitytext?.includes('Hurricane') || props.severitydata?.severitytext?.includes('Typhoon')) {
+                             level = 'Nguy hiểm';
+                             wind = 120;
+                        }
+
+                        alerts.push({
+                            id: props.eventid,
+                            location: props.name || 'Áp thấp / Bão đang hoạt động',
+                            province: props.country || 'Trên biển',
+                            level: level,
+                            type: 'Bão / ATNĐ',
+                            timestamp: new Date(props.todate).toLocaleTimeString('vi-VN'),
+                            rainAmount: 0, // GDACS không có mưa live ở endpoint này
+                            windSpeed: wind,
+                            description: `${props.description} - Di chuyển lúc ${new Date(props.todate).toLocaleDateString()}`,
+                            coords: [coords[0], coords[1]],
+                            source: 'LIVE'
+                        });
+
+                        // Vẽ bão thực
+                        updateStormLayers([coords[0], coords[1]], true);
+                    }
+                });
+
+                if (!foundStorm) {
+                    // Xóa layer bão nếu không có bão thực
+                    updateStormLayers([0,0], false);
+                }
+            }
+        } catch (stormErr) {
+            console.warn("Không lấy được dữ liệu bão GDACS (Có thể do mạng hoặc không có bão):", stormErr);
+            updateStormLayers([0,0], false);
+        }
+
         setNationalAlerts(clusterAlerts(alerts, 50));
         setLastScanTime(new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}));
+
     } catch (e) {
         console.warn("System Scan Error:", e);
     } finally { setIsScanning(false); }
+  };
+
+  // --- LOGIC VẼ BÃO LÊN BẢN ĐỒ ---
+  const updateStormLayers = (center: [number, number], isActive: boolean) => {
+      const map = mapRef.current;
+      if (!map) return;
+
+      // Xóa icon bão cũ
+      stormMarkersRef.current.forEach(m => m.remove());
+      stormMarkersRef.current = [];
+
+      // Reset sources nếu không có bão
+      if (!isActive) {
+          if (map.getSource('storm-wind-source')) {
+            (map.getSource('storm-wind-source') as GeoJSONSource).setData({ type: 'FeatureCollection', features: [] });
+            (map.getSource('storm-track-source') as GeoJSONSource).setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} });
+            (map.getSource('storm-cone-source') as GeoJSONSource).setData({ type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} });
+          }
+          return;
+      }
+
+      // 1. Tạo Icon Tâm Bão (Spinning Icon)
+      const el = document.createElement('div');
+      el.className = 'flex items-center justify-center';
+      el.innerHTML = `<div class="relative w-12 h-12 flex items-center justify-center"><div class="absolute inset-0 border-2 border-red-500 rounded-full animate-ping opacity-50"></div><div class="absolute inset-0 border border-white/30 rounded-full"></div><div class="animate-spin text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 22a2.5 2.5 0 0 1-2.5-2.5v-15a2.5 2.5 0 0 1 4.96-.44 2.5 2.5 0 0 1 2.96 3.08 3 3 0 0 1 .34 5.58 2.5 2.5 0 0 1-1.32 4.24 2.5 2.5 0 0 1-1.98 3 2.5 2.5 0 0 1-2.46 1.04Z"/></svg></div></div>`;
+      const stormMarker = new maplibregl.Marker({ element: el }).setLngLat(center).addTo(map);
+      stormMarkersRef.current.push(stormMarker);
+
+      // 2. Update GeoJSON Sources (Vòng tròn gió)
+      // Vì API public free không trả về bán kính gió chi tiết từng góc, ta vẽ vùng ảnh hưởng ước lượng
+      const windRad50 = createGeoJSONCircle(center, 150); // Ước lượng vùng nguy hiểm 150km
+      const windRad100 = createGeoJSONCircle(center, 50); // Mắt bão 50km
+
+      const windGeo: any = {
+          type: 'FeatureCollection',
+          features: [
+              { type: 'Feature', geometry: { type: 'Polygon', coordinates: windRad50 }, properties: { level: 2 } },
+              { type: 'Feature', geometry: { type: 'Polygon', coordinates: windRad100 }, properties: { level: 3 } }
+          ]
+      };
+
+      if (map.getSource('storm-wind-source')) {
+          (map.getSource('storm-wind-source') as GeoJSONSource).setData(windGeo);
+      }
   };
 
   useEffect(() => {
@@ -451,6 +577,9 @@ const SafeWaveApp = () => {
     alertMarkersRef.current = [];
 
     nationalAlerts.forEach(alert => {
+        // Skip vẽ marker bão ở đây vì đã vẽ bằng updateStormLayers
+        if (alert.type.includes('Bão')) return;
+
         const styles = getAlertStyles(alert.level);
         const el = document.createElement('div');
         el.className = 'flex items-center justify-center cursor-pointer group relative';
@@ -483,6 +612,32 @@ const SafeWaveApp = () => {
       map.addSource('terrain-source', { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], encoding: 'terrarium', tileSize: 256, maxzoom: 12 });
       map.setTerrain({ source: 'terrain-source', exaggeration: 1.5 });
       map.addLayer({ id: 'hillshade-layer', type: 'hillshade', source: 'terrain-source', paint: { 'hillshade-shadow-color': '#020408', 'hillshade-highlight-color': '#ffffff', 'hillshade-exaggeration': 1.1, 'hillshade-opacity': 0.6 } });
+
+      // --- STORM SOURCES (Real Data Placeholders) ---
+      map.addSource('storm-wind-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addSource('storm-track-source', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
+      map.addSource('storm-cone-source', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [] }, properties: {} } });
+
+      // --- STORM LAYERS (Visualization) ---
+      // 1. Forecast Cone (Vùng dự báo)
+      map.addLayer({
+          id: 'storm-cone-layer', type: 'fill', source: 'storm-cone-source',
+          paint: { 'fill-color': '#ffffff', 'fill-opacity': 0.1 }
+      });
+      // 2. Wind Radii (Các vòng tròn gió - Vàng/Cam/Đỏ)
+      map.addLayer({
+          id: 'storm-wind-layer', type: 'fill', source: 'storm-wind-source',
+          paint: {
+              'fill-color': ['match', ['get', 'level'], 1, '#facc15', 2, '#f97316', 3, '#ef4444', '#cccccc'],
+              'fill-opacity': 0.3,
+              'fill-outline-color': ['match', ['get', 'level'], 1, '#facc15', 2, '#f97316', 3, '#ef4444', '#cccccc']
+          }
+      });
+      // 3. Track Line (Đường đi dự kiến)
+      map.addLayer({
+          id: 'storm-track-layer', type: 'line', source: 'storm-track-source',
+          paint: { 'line-color': '#06b6d4', 'line-width': 2, 'line-dasharray': [2, 2], 'line-opacity': 0.8 }
+      });
 
       try {
         const rvRes = await fetch('https://api.rainviewer.com/public/weather-maps.json');
@@ -590,8 +745,11 @@ const SafeWaveApp = () => {
 
                     setDashboardInfo(newData);
                     
+                    // PASS STORM INFO TO RISK ENGINE
+                    const distToStorm = activeStormCoords ? haversineKm(lat, lng, activeStormCoords[1], activeStormCoords[0]) : 9999;
+
                     setTimeout(() => {
-                        const result = calculateComplexRisk(newData, recentMaxMag);
+                        const result = calculateComplexRisk(newData, recentMaxMag, distToStorm);
                         setAiResult(result);
                         setAnalyzing(false);
                         if (result.level >= 2) {
@@ -609,7 +767,7 @@ const SafeWaveApp = () => {
         } catch (err) { setAnalyzing(false); }
       });
     });
-  }, [recentMaxMag]); 
+  }, [recentMaxMag, activeStormCoords]); 
 
   return (
     <div className="relative w-full h-screen bg-[#020408] text-slate-200 overflow-hidden font-sans selection:bg-cyan-500/30">
@@ -730,7 +888,7 @@ const SafeWaveApp = () => {
                              {nationalAlerts.length === 0 ? <div className="text-center py-10 text-gray-500 text-xs">Không phát hiện sự kiện thiên tai nghiêm trọng trong khu vực.</div> : nationalAlerts.map((alert) => (
                                  <div key={alert.id} onClick={() => { setSelectedAlert(alert); mapRef.current?.flyTo({ center: alert.coords, zoom: alert.isCluster ? 9 : 11, speed: 1.5 }); }} className="bg-[#0b0f16]/60 border border-white/5 hover:border-red-500/30 hover:bg-red-500/5 rounded-xl p-3 transition flex gap-3 items-start group cursor-pointer relative overflow-hidden">
                                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${alert.level === 'Nguy hiểm' ? 'bg-red-500/20 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]' : alert.level === 'Cảnh báo' ? 'bg-orange-500/20 text-orange-500' : alert.level === 'Nhẹ' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}`}>
-                                        {alert.isCluster ? <Activity size={20} /> : (alert.level === 'Nguy hiểm' ? <Siren size={20} className="animate-pulse"/> : alert.level === 'Cảnh báo' ? <AlertTriangle size={20}/> : <Info size={20}/>)}
+                                        {alert.type.includes('Bão') ? <Tornado size={20} className="animate-spin-slow"/> : alert.isCluster ? <Activity size={20} /> : (alert.level === 'Nguy hiểm' ? <Siren size={20} className="animate-pulse"/> : alert.level === 'Cảnh báo' ? <AlertTriangle size={20}/> : <Info size={20}/>)}
                                      </div>
                                      <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start">
@@ -780,7 +938,7 @@ const SafeWaveApp = () => {
                     <div className={`w-full max-w-md glass-card rounded-3xl p-6 relative border ${styles.border} ${styles.shadow}`}>
                         <button onClick={() => setSelectedAlert(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition"><X size={20}/></button>
                         <div className="flex items-center gap-3 mb-6">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${styles.iconBg} ${styles.iconText}`}>{selectedAlert.level === 'Nguy hiểm' ? <Siren size={24} className="animate-pulse"/> : selectedAlert.level === 'Cảnh báo' ? <AlertTriangle size={24}/> : <Info size={24}/>}</div>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${styles.iconBg} ${styles.iconText}`}>{selectedAlert.type.includes('Bão') ? <Tornado size={24} className="animate-spin-slow"/> : selectedAlert.level === 'Nguy hiểm' ? <Siren size={24} className="animate-pulse"/> : selectedAlert.level === 'Cảnh báo' ? <AlertTriangle size={24}/> : <Info size={24}/>}</div>
                             <div><div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${styles.titleText}`}>Cảnh báo khẩn cấp</div><h3 className="text-xl font-bold text-white leading-none">{selectedAlert.location}</h3><span className="text-sm text-gray-400">{selectedAlert.province}</span></div>
                         </div>
                         <div className="space-y-4">
