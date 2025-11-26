@@ -34,7 +34,7 @@ const ASIA_BOUNDS: LngLatBoundsLike = [[60.0, -15.0], [150.0, 55.0]];
 // --- TYPES ---
 interface RainStats {
   h1: number; h2: number; h3: number; h5: number; h12: number; h24: number;
-  d3: number; d7: number; d14: number; // Đây là dữ liệu dự báo (Forecast)
+  d3: number; d7: number; d14: number;
 }
 
 interface DashboardData {
@@ -73,91 +73,38 @@ interface AlertItem {
   coneGeoJSON?: any; 
 }
 
-// --- STRICT SCORING ENGINE (UPDATED FOR EARLY WARNING) ---
-const clamp = (x: number, a = 0, b = 100) => Math.max(a, Math.min(b, x));
-const norm = (value: number, min: number, max: number) => {
-  if (max === min) return 0;
-  return clamp((value - min) / (max - min) * 100);
-};
+// ==========================================
+// --- ADVANCED RISK ENGINE (LOGIC MỚI) ---
+// ==========================================
 
-// 1. Weather Score (Updated weights for forecast)
-interface WeatherInputs {
-    rainWindows: RainStats;
-    humidity: number;
-    soil_moisture: number; 
-    wind_kmh: number;
-    wind_gust_kmh: number;
-    pressure_hPa: number;
+// 1. Định nghĩa các Types cho Logic mới
+interface RiskReason {
+  code: string;
+  score: number;
+  description: string;
+  source: 'Weather' | 'Geo' | 'Storm' | 'Hydro' | 'Manual';
 }
 
-const computeWeatherScore = ({rainWindows, humidity, soil_moisture, wind_kmh, wind_gust_kmh, pressure_hPa}: WeatherInputs) => {
-  const rainWeight = 0.50; 
-  const windWeight = 0.40; 
-  const humidityWeight = 0.02;
-  const soilWeight = 0.05; 
-  const pressureWeight = 0.03;
-
-  // Cập nhật trọng số: Tăng tầm quan trọng của dự báo 3 ngày (d3) và 7 ngày (d7)
-  // d3, d7 lấy từ Open-Meteo Daily Forecast
-  const rainScore =
-    0.15*norm(rainWindows.h1, 5, 100) +   
-    0.10*norm(rainWindows.h3, 10, 150) +  
-    0.10*norm(rainWindows.h24, 30, 200) +
-    0.35*norm(rainWindows.d3, 50, 250) +   // Tăng trọng số dự báo 3 ngày (Early Warning)
-    0.30*norm(rainWindows.d7, 100, 400);   // Tăng trọng số dự báo 7 ngày
-
-  const windBase = clamp((wind_kmh - 30) / (200 - 30) * 100, 0, 100);
-  const windGustScore = wind_gust_kmh === null ? 0 : clamp((wind_gust_kmh - 50) / (260 - 50) * 100, 0, 100);
-  const windScore = Math.round(0.6 * windBase + 0.4 * windGustScore);
-
-  const humidityScore = norm(humidity ?? 60, 60, 100); 
-  const soilScore = soil_moisture == null ? 0 : norm(soil_moisture, 0.5, 0.95) * 100; // Đất càng ẩm càng nguy hiểm
-  const pressureScore = clamp((1010 - (pressure_hPa ?? 1010)) / (1010 - 900) * 100, 0, 100);
-
-  let weatherScore = Math.round(
-    rainWeight*rainScore +
-    windWeight*windScore +
-    humidityWeight*humidityScore +
-    soilWeight*soilScore +
-    pressureWeight*pressureScore
-  );
-
-  return clamp(weatherScore, 0, 100);
-};
-
-// 2. Storm Score
-interface StormInputs {
-    d_km: number; 
-    wind_kmh: number;
-    wind_gust_kmh: number;
-    pressure_hPa: number;
-}
-const computeStormScore = ({d_km, wind_kmh, wind_gust_kmh, pressure_hPa}: StormInputs) => {
-    if (d_km > 1000) return 0; // Tăng phạm vi quét bão lên 1000km
-
-    const Rmax = 500; 
-    const prox = clamp((Rmax - d_km) / Rmax * 100, 0, 100);
-    const windScore = clamp((wind_kmh - 40) / (200 - 40) * 100, 0, 100); 
-    
-    // Nếu gần tâm bão (<150km), điểm bão rất cao
-    if (d_km < 150) return Math.max(95, Math.round(0.60 * prox + 0.40 * windScore));
-    return Math.round(0.70 * prox + 0.30 * windScore);
-};
-
-// 3. Terrain/Geo Score
-const computeTerrainScore = ({slope}: {slope: number}) => {
-    return clamp(slope / 50 * 100, 0, 100); 
-};
-
-// 4. Total Calculation (Nâng cấp Logic Cảnh Báo Sớm)
-interface TotalRiskInputs {
-    weather: WeatherInputs;
-    storm: StormInputs;
-    terrain: { slope: number };
+interface AdvancedRiskOutput {
+  level: number; // 1: An toàn, 2: Nhẹ, 3: Cảnh báo, 4: Nguy hiểm
+  label: RiskLevel;
+  score: number;
+  confidence: number;
+  reasons: RiskReason[];
+  actions: string;
+  factors: {
+     terrain: TerrainType;
+     soil: string;
+     saturation: number;
+     wScore: number; // Để tương thích UI cũ
+     sScore: number; // Để tương thích UI cũ
+     tScore: number; // Để tương thích UI cũ
+  }
 }
 
 type TerrainType = 'Đồng bằng' | 'Lòng chảo/Thung lũng' | 'Taluy dương' | 'Đỉnh đồi/Núi cao' | 'Ven sông/Suối' | 'Ven biển' | 'Chân núi';
 
+// Để tương thích với UI cũ đang dùng RiskAnalysisResult
 interface RiskAnalysisResult {
     level: number; 
     riskLabel: RiskLevel;
@@ -173,144 +120,224 @@ interface RiskAnalysisResult {
     }
 }
 
-const computeTotalRisk = (inputs: TotalRiskInputs): { score: number, level: number, label: RiskLevel, factors: any, forceReason?: string } => {
-    const wScore = computeWeatherScore(inputs.weather);
-    const sScore = computeStormScore(inputs.storm);
-    const tScore = computeTerrainScore(inputs.terrain);
-    
-    // Trọng số rủi ro
-    const W = { w: 0.45, s: 0.45, t: 0.10 };
-    const soilFactor = (inputs.weather.soil_moisture || 0) * 20; 
-
-    let total = Math.round((W.w * wScore) + (W.s * sScore) + (W.t * tScore));
-    if (tScore > 50) total += soilFactor * 0.3; // Địa hình dốc + đất ẩm = tăng rủi ro
-
-    // --- LOGIC "EARLY WARNING KILL SWITCH" ---
-    // Các điều kiện bắt buộc trả về cảnh báo SỚM bất chấp điểm số hiện tại
-    
-    let forcedLevel = 0;
-    let forceReason = '';
-
-    // 1. Cảnh báo Bão gần
-    if (inputs.storm.d_km < 250) {
-        forcedLevel = 4; forceReason = 'Bão đang áp sát';
-    } else if (inputs.storm.d_km < 500) {
-        forcedLevel = Math.max(forcedLevel, 3); forceReason = 'Ảnh hưởng hoàn lưu bão';
-    }
-
-    // 2. Cảnh báo Mưa Lũ (Dựa trên dự báo 3 ngày - d3)
-    // Nếu dự báo 3 ngày mưa > 250mm -> Nguy cơ lũ lụt cực cao
-    if (inputs.weather.rainWindows.d3 > 250) {
-        forcedLevel = 4; forceReason = 'Dự báo mưa cực lớn (nguy cơ lũ quét)';
-    } else if (inputs.weather.rainWindows.d3 > 120) {
-        forcedLevel = Math.max(forcedLevel, 3); forceReason = 'Dự báo mưa lớn diện rộng';
-    } else if (inputs.weather.rainWindows.d3 > 60) {
-        forcedLevel = Math.max(forcedLevel, 2); forceReason = 'Dự báo đợt mưa dài ngày';
-    }
-
-    // 3. Cảnh báo Gió giật
-    if (inputs.weather.wind_gust_kmh > 90) {
-        forcedLevel = 4; forceReason = 'Gió giật cấp độ bão';
-    } else if (inputs.weather.wind_gust_kmh > 60) {
-        forcedLevel = Math.max(forcedLevel, 3); forceReason = 'Gió giật mạnh';
-    }
-
-    // Áp dụng Logic Override
-    let level = 1;
-    let label: RiskLevel = 'An toàn';
-
-    // Tính toán level cơ bản
-    if (total >= 80) level = 4;
-    else if (total >= 60) level = 3;
-    else if (total >= 30) level = 2;
-
-    // So sánh với forcedLevel
-    if (forcedLevel > level) {
-        level = forcedLevel;
-        // Tăng total ảo để hiển thị thanh bar cho đúng mức
-        if (level === 4) total = Math.max(total, 90);
-        if (level === 3) total = Math.max(total, 70);
-        if (level === 2) total = Math.max(total, 40);
-    }
-
-    if (level === 4) label = 'Nguy hiểm';
-    else if (level === 3) label = 'Cảnh báo';
-    else if (level === 2) label = 'Nhẹ';
-    
-    return { score: total, level, label, factors: { wScore, sScore, tScore }, forceReason };
+// 2. Hàm xác định địa hình & Multiplier (Dựa trên cao độ thực tế)
+const determineTerrain = (elevation: number): { type: TerrainType, multiplier: number } => {
+    if (elevation < 5) return { type: 'Ven biển', multiplier: 1.4 }; // Dễ ngập/triều cường
+    if (elevation < 20) return { type: 'Đồng bằng', multiplier: 1.0 };
+    if (elevation > 50 && elevation < 200) return { type: 'Chân núi', multiplier: 1.5 }; // Dễ tụ thủy
+    if (elevation >= 200 && elevation < 500) return { type: 'Taluy dương', multiplier: 1.7 }; // Sạt lở
+    if (elevation >= 500) return { type: 'Đỉnh đồi/Núi cao', multiplier: 1.7 };
+    return { type: 'Đồng bằng', multiplier: 1.0 };
 };
 
-// 5. Text Generation Wrapper (Updated for Forecasting)
-const calculateComplexRisk = (data: DashboardData, distToStorm: number = 9999): RiskAnalysisResult => {
-    let terrain: TerrainType = 'Đồng bằng';
-    if (data.elevation > 500) terrain = 'Đỉnh đồi/Núi cao';
-    else if (data.elevation > 100) terrain = 'Chân núi';
-    else if (data.elevation < 5) terrain = 'Ven biển';
-    else if (data.elevation > 20 && data.elevation < 100) terrain = 'Taluy dương';
+// 3. Hàm tính toán Confidence (Độ tin cậy)
+const calculateConfidence = (hasStormAlert: boolean, hasRealtimeRain: boolean): number => {
+    let conf = 0.5; // Base
+    if (hasStormAlert) conf += 0.15; // Có cảnh báo bão chính thức
+    if (hasRealtimeRain) conf += 0.1; // Có dữ liệu quan trắc mưa thực tế
+    // Cap confidence
+    return Math.min(0.99, Math.max(0.1, conf));
+};
 
-    const result = computeTotalRisk({
-        weather: {
-            rainWindows: data.rainStats,
-            humidity: data.humidity,
-            soil_moisture: data.soilMoisture || 0.3,
-            wind_kmh: data.windSpeed,
-            wind_gust_kmh: data.windGusts,
-            pressure_hPa: data.pressureSea
-        },
-        storm: {
-            d_km: distToStorm,
-            wind_kmh: data.windSpeed,
-            wind_gust_kmh: data.windGusts,
-            pressure_hPa: data.pressureSea
-        },
-        terrain: { slope: data.elevation > 200 ? 30 : 5 }
-    });
-
-    let causes = [];
+// 4. MAIN ENGINE: Tính toán rủi ro chi tiết
+const calculateAdvancedRisk = (data: DashboardData, distToStorm: number): AdvancedRiskOutput => {
+    const reasons: RiskReason[] = [];
+    let rawScore = 0;
     
-    // Ưu tiên hiển thị lý do ép buộc (Forced Reason) từ dự báo sớm
-    if (result.forceReason) {
-        causes.push(result.forceReason.toUpperCase());
+    // --- A. PHÂN TÍCH MƯA (RAIN) ---
+    // Mưa 1h (Hiện tại)
+    if (data.rainStats.h1 >= 50) { 
+        rawScore += 5; reasons.push({ code: 'rain_very_heavy', score: 5, description: `Mưa rất to (${data.rainStats.h1.toFixed(0)}mm/h)`, source: 'Weather' }); 
+    } else if (data.rainStats.h1 >= 20) { 
+        rawScore += 3; reasons.push({ code: 'rain_heavy', score: 3, description: `Mưa to (${data.rainStats.h1.toFixed(0)}mm/h)`, source: 'Weather' });
+    } else if (data.rainStats.h1 >= 5) { 
+        rawScore += 2; reasons.push({ code: 'rain_moderate', score: 2, description: `Mưa vừa`, source: 'Weather' });
+    } else if (data.rainStats.h1 > 0.5) { 
+        rawScore += 1; reasons.push({ code: 'rain_light', score: 1, description: `Mưa nhỏ`, source: 'Weather' });
     }
 
-    // Bổ sung chi tiết
-    if (result.factors.sScore > 40 && distToStorm < 800) {
-        causes.push(`Bão cách ${Math.round(distToStorm)}km`);
+    // Mưa tích lũy (Cumulative/Persistence)
+    // Mưa 3h cường suất lớn
+    if (data.rainStats.h3 > 100) {
+        rawScore += 5; reasons.push({ code: 'rain_cumulative_extreme', score: 5, description: `Mưa cực lớn 3h (${data.rainStats.h3.toFixed(0)}mm)`, source: 'Weather' });
+    }
+    // Mưa kéo dài (Dự báo 3 ngày tới hoặc tích lũy)
+    if (data.rainStats.d3 > 200) {
+        rawScore += 4; reasons.push({ code: 'rain_persistent_heavy', score: 4, description: `Mưa tích lũy lớn dài ngày`, source: 'Weather' });
+    } else if (data.rainStats.d3 > 50) {
+        rawScore += 2; reasons.push({ code: 'rain_light_continuous', score: 2, description: `Mưa dầm dài ngày`, source: 'Weather' });
     }
 
-    if (data.rainStats.d3 > 150) causes.push(`Dự báo mưa 3 ngày tới: ${data.rainStats.d3.toFixed(0)}mm`);
-    else if (data.rainStats.h3 > 50) causes.push(`Mưa đang lớn (${data.rainStats.h3.toFixed(0)}mm/3h)`);
+    // --- B. PHÂN TÍCH GIÓ (WIND) ---
+    const windKmh = data.windSpeed;
+    const gustKmh = data.windGusts;
     
-    if (data.windGusts > 50) causes.push(`Gió cấp ${data.windGusts > 88 ? '10' : data.windGusts > 74 ? '9' : '7-8'}`);
+    if (gustKmh > 100) { // > Cấp 10
+        rawScore += 6; reasons.push({ code: 'wind_extreme', score: 6, description: `Gió giật >100km/h (Cấp 10+)`, source: 'Weather' });
+    } else if (gustKmh >= 62) { // Cấp 8-9
+        rawScore += 4; reasons.push({ code: 'wind_strong', score: 4, description: `Gió mạnh cấp 8-9`, source: 'Weather' });
+    } else if (gustKmh >= 39) { // Cấp 6-7
+        rawScore += 2; reasons.push({ code: 'wind_moderate', score: 2, description: `Gió cấp 6-7`, source: 'Weather' });
+    }
+
+    // Combo Gió + Mưa
+    if (gustKmh >= 62 && data.rainStats.h1 > 10) {
+        rawScore += 2; reasons.push({ code: 'combo_wind_rain', score: 2, description: `Gió mạnh kèm mưa lớn`, source: 'Weather' });
+    }
+
+    // --- C. BÃO / ÁP THẤP (STORM) ---
+    const inStormPath = distToStorm < 100; // Giả định nằm trong vùng tâm bão 100km
+    const nearStorm = distToStorm < 300; // Vùng hoàn lưu
+
+    if (inStormPath) {
+        rawScore += 7; reasons.push({ code: 'storm_path', score: 7, description: `Nằm trong đường đi/tâm bão (<100km)`, source: 'Storm' });
+    } else if (nearStorm) {
+        rawScore += 4; reasons.push({ code: 'storm_near', score: 4, description: `Ảnh hưởng hoàn lưu bão (<300km)`, source: 'Storm' });
+    }
+
+    // --- D. KHÍ TƯỢNG NÂNG CAO (METADATA) ---
+    // Áp suất giảm thấp (dấu hiệu bão/áp thấp đến gần)
+    if (data.pressureSea < 990) {
+        rawScore += 2; reasons.push({ code: 'pressure_drop', score: 2, description: `Áp suất giảm thấp (${data.pressureSea}hPa)`, source: 'Weather' });
+    }
+    // Độ ẩm bão hòa
+    if (data.humidity >= 95) {
+        rawScore += 1; // Nhẹ
+    }
+
+    // --- E. ĐỊA CHẤT / ĐỊA HÌNH (MULTIPLIER) ---
+    const terrainInfo = determineTerrain(data.elevation);
+    const multiplier = terrainInfo.multiplier;
     
-    if (result.factors.tScore > 50 && (data.soilMoisture || 0) > 0.75) causes.push("Đất bão hòa (nguy cơ sạt lở)");
+    // Đất bão hòa (Soil Saturation)
+    const soilSat = (data.soilMoisture || 0.3) * 100;
+    let geoBonus = 0;
+    
+    if (soilSat > 80 && multiplier > 1.2) {
+        // Đất ướt + Địa hình dốc/yếu -> Tăng multiplier thực tế
+        geoBonus += 2; 
+        reasons.push({ code: 'geo_risk', score: 0, description: `Đất bão hòa (${soilSat.toFixed(0)}%) tại ${terrainInfo.type}`, source: 'Geo' });
+    }
 
-    let title = 'AN TOÀN';
-    if (result.level === 4) title = 'BÁO ĐỘNG ĐỎ';
-    else if (result.level === 3) title = 'CẢNH BÁO CAM';
-    else if (result.level === 2) title = 'LƯU Ý VÀNG';
+    // --- TÍNH TỔNG ĐIỂM (SCORE CALCULATION) ---
+    let totalScore = (rawScore * multiplier) + geoBonus;
+    
+    // --- 5. QUY TẮC OVERRIDE (KILL SWITCH) ---
+    let overrideLevel = 0;
+    let overrideReason = '';
 
-    // Tạo description thông minh hơn
-    let description = '';
-    const causeText = causes.length > 0 ? causes.join(' • ') : 'Thời tiết diễn biến phức tạp';
+    // Rule 1: Trong tâm bão + (Gió to HOẶC Mưa to) -> Nguy hiểm
+    if (inStormPath && (gustKmh >= 62 || data.rainStats.h3 > 50)) {
+        overrideLevel = 4; overrideReason = 'Tâm bão quét qua + Thời tiết cực đoan';
+    }
+    
+    // Rule 2: Combo 2 điều kiện cực đoan -> Nguy hiểm
+    // Ví dụ: Lũ quét (Mưa d3 > 200) + Đất bão hòa cao + Địa hình dốc
+    if (data.rainStats.d3 > 200 && soilSat > 85 && terrainInfo.multiplier >= 1.5) {
+        overrideLevel = 4; overrideReason = 'Nguy cơ sạt lở đất/lũ quét cực cao';
+    }
 
-    if (result.level === 1) {
-        description = `Các chỉ số an toàn. Dự báo thời tiết tại ${terrain.toLowerCase()} ổn định trong 24h tới.`;
-    } else {
-        // Format cảnh báo sớm
-        description = `PHÁT HIỆN RỦI RO: ${causeText}. Khu vực ${terrain} cần theo dõi sát bản tin dự báo và chuẩn bị phương án phòng tránh.`;
+    // Rule 3: Gió giật cấp 12 trở lên -> Nguy hiểm
+    if (gustKmh > 118) {
+        overrideLevel = 4; overrideReason = 'Gió giật cấp 12 (Sức phá hoại lớn)';
+    }
+
+    // Rule 4: Triều cường/Ngập lụt ven biển (Giả lập: Ven biển + Gió mạnh + Mưa)
+    if (terrainInfo.type === 'Ven biển' && gustKmh > 75 && data.rainStats.h24 > 100) {
+        overrideLevel = 4; overrideReason = 'Nước dâng do bão/Ngập lụt ven biển';
+    }
+
+    // --- 6. PHÂN LOẠI LEVEL & ACTION ---
+    let finalLevel = 1;
+    let label: RiskLevel = 'An toàn';
+    let actions = 'Theo dõi các bản tin dự báo thời tiết thường xuyên.';
+
+    // Phân tầng theo Score
+    if (totalScore >= 13) finalLevel = 4;
+    else if (totalScore >= 7) finalLevel = 3;
+    else if (totalScore >= 3) finalLevel = 2;
+    else finalLevel = 1;
+
+    // Áp dụng Override
+    if (overrideLevel > finalLevel) {
+        finalLevel = overrideLevel;
+        reasons.unshift({ code: 'OVERRIDE', score: 99, description: `KÍCH HOẠT KHẨN CẤP: ${overrideReason}`, source: 'Manual' });
+    }
+
+    // Mapping Label & Actions
+    switch (finalLevel) {
+        case 4:
+            label = 'Nguy hiểm';
+            actions = 'SƠ TÁN KHẨN CẤP. Tìm nơi trú ẩn an toàn. Cắt điện, gia cố nhà cửa. Không di chuyển qua vùng ngập/sạt lở.';
+            break;
+        case 3:
+            label = 'Cảnh báo';
+            actions = 'Hạn chế ra đường. Chuẩn bị nhu yếu phẩm. Kiểm tra hệ thống thoát nước/mái nhà. Sẵn sàng di dời nếu cần.';
+            break;
+        case 2:
+            label = 'Nhẹ';
+            actions = 'Cảnh giác khi tham gia giao thông. Mang theo áo mưa/ô. Tránh các hoạt động ngoài trời kéo dài.';
+            break;
+        case 1:
+        default:
+            label = 'An toàn';
+            actions = 'Điều kiện thuận lợi. Sinh hoạt và làm việc bình thường.';
+            break;
     }
 
     return {
-        level: result.level,
-        riskLabel: result.label,
-        title: title,
-        description,
-        factors: { terrain, soil: 'Đất tự nhiên', saturation: (data.soilMoisture || 0.4) * 100 }
+        level: finalLevel,
+        label: label,
+        score: totalScore,
+        confidence: calculateConfidence(distToStorm < 1000, data.rainStats.h1 > 0),
+        reasons: reasons,
+        actions: actions,
+        factors: {
+            terrain: terrainInfo.type,
+            soil: 'Đất tự nhiên',
+            saturation: soilSat,
+            wScore: Math.min(100, (rawScore / 15) * 100), // Mapping ảo để hiển thị UI cũ
+            sScore: Math.min(100, (inStormPath ? 95 : nearStorm ? 60 : 10)), // Mapping ảo
+            tScore: Math.min(100, (multiplier - 1) * 100) // Mapping ảo
+        }
     };
 };
 
-// --- UTILS ---
+// 5. Wrapper tương thích ngược với UI cũ
+const calculateComplexRisk = (data: DashboardData, distToStorm: number = 9999): RiskAnalysisResult => {
+    const advancedResult = calculateAdvancedRisk(data, distToStorm);
+
+    // Tạo description từ reasons
+    let desc = '';
+    if (advancedResult.reasons.length > 0) {
+        // Lấy 3 lý do quan trọng nhất (điểm cao nhất)
+        const topReasons = advancedResult.reasons
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3)
+            .map(r => r.description);
+        desc = topReasons.join('. ') + '.';
+    } else {
+        desc = 'Thời tiết ổn định, không có yếu tố rủi ro đáng kể.';
+    }
+
+    // Thêm action vào description cho UI hiện tại
+    if (advancedResult.level > 1) {
+        desc += ` \nKHUYẾN NGHỊ: ${advancedResult.actions}`;
+    }
+
+    return {
+        level: advancedResult.level,
+        riskLabel: advancedResult.label,
+        title: advancedResult.level === 4 ? 'BÁO ĐỘNG ĐỎ' : advancedResult.level === 3 ? 'CẢNH BÁO CAM' : advancedResult.level === 2 ? 'LƯU Ý VÀNG' : 'AN TOÀN',
+        description: desc,
+        factors: advancedResult.factors
+    };
+};
+
+// ==========================================
+// --- UTILS & COMPONENTS (GIỮ NGUYÊN) ---
+// ==========================================
+
 const formatHistoryTime = (timestamp: number) => {
     const now = Date.now();
     const diffMs = now - timestamp;
