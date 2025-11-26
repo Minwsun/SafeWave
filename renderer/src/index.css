@@ -23,7 +23,6 @@ html, body, #root {
 
 /* --- UI SYSTEM: DARK NEON GLASS --- */
 
-/* 1. Lớp kính chủ đạo */
 .glass-card {
   background: rgba(5, 6, 10, 0.85);
   backdrop-filter: blur(24px);
@@ -35,7 +34,6 @@ html, body, #root {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 2. Nút bấm kính */
 .glass-btn {
   background: rgba(5, 6, 10, 0.6);
   backdrop-filter: blur(16px);
@@ -53,7 +51,6 @@ html, body, #root {
   box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
-/* 3. Text Neon Glow */
 .text-glow { text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
 .text-glow-cyan { text-shadow: 0 0 15px rgba(34, 211, 238, 0.5); }
 .text-glow-red { text-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
@@ -61,7 +58,7 @@ html, body, #root {
 /* --- MAP CUSTOMIZATION --- */
 .maplibregl-ctrl-attrib { display: none !important; }
 
-/* Custom Marker Neon */
+/* Custom Marker Neon (User Click) */
 .neon-marker-container { 
   position: relative; width: 20px; height: 20px; 
   display: flex; align-items: center; justify-content: center; 
@@ -75,6 +72,53 @@ html, body, #root {
   background-color: rgba(34, 211, 238, 0.5); 
   animation: neon-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; z-index: 1; 
 }
+
+/* --- STORM NEON VISUALIZATION (New) --- */
+.storm-neon-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+}
+
+.storm-core-glow {
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 
+    0 0 15px #ff00ff, 
+    0 0 30px #d946ef, 
+    0 0 45px #a855f7;
+  z-index: 10;
+  position: relative;
+}
+
+.storm-ring-1 {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(217, 70, 239, 0.3);
+  border-radius: 50%;
+  animation: storm-spin 3s linear infinite;
+  box-shadow: 0 0 15px rgba(217, 70, 239, 0.2);
+}
+
+.storm-ring-2 {
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  border: 2px solid rgba(168, 85, 247, 0.6);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: storm-spin-reverse 2s linear infinite;
+}
+
+@keyframes storm-spin { to { transform: rotate(360deg); } }
+@keyframes storm-spin-reverse { to { transform: rotate(-360deg); } }
+
 @keyframes neon-ping { 75%, 100% { transform: scale(3); opacity: 0; } }
 
 /* Scrollbar */
@@ -91,10 +135,3 @@ html, body, #root {
   animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* Shimmer Animation */
-@keyframes shimmer {
-  0% { transform: translateY(100%); opacity: 0; }
-  50% { opacity: 0.5; }
-  100% { transform: translateY(-100%); opacity: 0; }
-}

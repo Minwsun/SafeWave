@@ -10,4 +10,15 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      // Cấu hình Proxy để bypass lỗi CORS
+      '/api-gdacs': {
+        target: 'https://www.gdacs.org',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api-gdacs/, ''),
+      },
+    },
+  },
 })
