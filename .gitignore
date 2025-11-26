@@ -6,4 +6,9 @@ renderer/dist/
 npm-debug.log*
 *.log
 
+# Environment variables (API keys, credentials)
+.env
+.env.local
+.env.*.local
+
 
