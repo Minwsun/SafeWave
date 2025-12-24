@@ -1,11 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl, { type Map as MapLibreInstance, type StyleSpecification, type LngLatBoundsLike, Marker, type GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+import { dbService, type ProvinceRainSample, type ShelterItem, type HistoricRainRecord, type HistoryDetail } from './services/dbService';
+import { VIETNAM_PROVINCES } from './data/provinces';
+import PROVINCE_CENTROIDS from './data/province-centroids';
 import {
   Activity, Droplets, Gauge, MapPin, 
   ShieldCheck, Sun, Wind, X, Search,
   History, AlertTriangle, Minus, LayoutDashboard,
-  RefreshCw, Maximize2, Siren, Mountain, ArrowUp, ArrowDown, Waves, Umbrella, Navigation, Info, Clock, Tornado
+
+  RefreshCw, Maximize2, Siren, Mountain, ArrowUp, ArrowDown, Waves, Umbrella, Navigation, Info, Clock, Tornado, CloudRain, Star, Trash2, Building, PhoneCall, Users, Map
 } from 'lucide-react';
 
 // --- CẤU HÌNH API & DỮ LIỆU ---
@@ -30,6 +35,41 @@ const MAP_STYLE: StyleSpecification = {
 } as StyleSpecification;
 
 const ASIA_BOUNDS: LngLatBoundsLike = [[60.0, -15.0], [150.0, 55.0]];
+
+const WINDY_RADAR_TILES = 'https://tiles.windy.com/tiles/radar/{z}/{x}/{y}.png';
+const WINDY_ATTRIBUTION = 'Windy.com';
+
+type ProvinceCentroidMap = Record<string, { latitude: number; longitude: number }>;
+
+const PROVINCE_CENTROID_MAP: ProvinceCentroidMap = PROVINCE_CENTROIDS.reduce<ProvinceCentroidMap>((acc, centroid) => {
+    acc[centroid.province] = { latitude: centroid.latitude, longitude: centroid.longitude };
+    return acc;
+}, {});
+
+const buildWindyEmbedUrl = (lat: number, lon: number, zoom: number) => {
+    const params = new URLSearchParams({
+        lat: lat.toFixed(3),
+        lon: lon.toFixed(3),
+        detailLat: lat.toFixed(3),
+        detailLon: lon.toFixed(3),
+        zoom: Math.min(12, Math.max(3, Math.round(zoom))).toString(),
+        level: 'surface',
+        overlay: 'wind',
+        product: 'ecmwf',
+        type: 'map',
+        location: 'coordinates',
+        detail: 'true',
+        metricWind: 'default',
+        metricTemp: 'default',
+        calendar: 'now',
+        pressure: 'true',
+        message: 'true',
+        menu: '',
+        marker: 'true',
+        radarRange: '-1'
+    });
+    return `https://embed.windy.com/embed2.html?${params.toString()}`;
+};
 
 // --- TYPES ---
 interface RainStats {
@@ -56,7 +96,8 @@ interface DashboardData {
 type RiskLevel = 'Nguy hiểm' | 'Cảnh báo' | 'Nhẹ' | 'An toàn';
 
 interface HistoryItem {
-  id: number; location: string; risk: RiskLevel; type: string;
+
+  id: number; location: string; risk: RiskLevel; type: string; is_favorite?: number; created_at?: string;
 }
 
 interface AlertItem {
@@ -71,6 +112,15 @@ interface AlertItem {
   source?: 'JTWC' | 'GDACS' | 'FALLBACK';
   trackData?: any[]; 
   coneGeoJSON?: any; 
+}
+
+
+interface LiveMonitoringOptions {
+  presetTitle?: string;
+  presetSubtitle?: string;
+  provinceOverride?: string;
+  persist?: boolean;
+  focusAnalysis?: boolean;
 }
 
 // ==========================================
@@ -130,6 +180,17 @@ const determineTerrain = (elevation: number): { type: TerrainType, multiplier: n
     return { type: 'Đồng bằng', multiplier: 1.0 };
 };
 
+
+const hasValidLocationName = (name: string): boolean => {
+    if (!name) return false;
+    const normalized = name.trim().toLowerCase();
+    if (normalized.length < 5) return false;
+    if (normalized.includes('đang xác định') || normalized.includes('không thể lấy')) return false;
+    if (normalized === 'khu vực tự nhiên' || normalized === 'việt nam') return false;
+    if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(normalized)) return false;
+    return true;
+};
+
 // 3. Hàm tính toán Confidence (Độ tin cậy)
 const calculateConfidence = (hasStormAlert: boolean, hasRealtimeRain: boolean): number => {
     let conf = 0.5; // Base
@@ -169,7 +230,6 @@ const calculateAdvancedRisk = (data: DashboardData, distToStorm: number): Advanc
     }
 
     // --- B. PHÂN TÍCH GIÓ (WIND) ---
-    const windKmh = data.windSpeed;
     const gustKmh = data.windGusts;
     
     if (gustKmh > 100) { // > Cấp 10
@@ -452,6 +512,8 @@ const SafeWaveApp = () => {
   const markerRef = useRef<Marker | null>(null);
   const alertMarkersRef = useRef<Marker[]>([]);
   const stormMarkersRef = useRef<Marker[]>([]); 
+
+  const shelterMarkersRef = useRef<Marker[]>([]);
   const nationalAlertsRef = useRef<AlertItem[]>([]); // Ref to access data in listeners
   
   // --- STATE SYSTEM ---
@@ -459,7 +521,8 @@ const SafeWaveApp = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [isAIConsoleOpen, setIsAIConsoleOpen] = useState(true);
   const [isDashboardOpen, setIsDashboardOpen] = useState(true);
-  const [consoleTab, setConsoleTab] = useState<'analysis' | 'alerts' | 'history'>('analysis');
+
+  const [consoleTab, setConsoleTab] = useState<'analysis' | 'alerts' | 'history' | 'rain' | 'shelters'>('analysis');
   
   const [dashboardInfo, setDashboardInfo] = useState<DashboardData>({ 
     title: 'Sẵn sàng', subtitle: 'Hệ thống đang chờ lệnh', coordinates: '--', 
@@ -476,10 +539,427 @@ const SafeWaveApp = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<AlertItem | null>(null); 
 
+  const [showRainLayer, setShowRainLayer] = useState(false);
+  const [rainLayerTime, setRainLayerTime] = useState<number | null>(null); 
+  const [provinceOptions, setProvinceOptions] = useState<string[]>([...VIETNAM_PROVINCES]);
+  const [selectedProvince, setSelectedProvince] = useState<string>('');
+  const [provinceRainHistory, setProvinceRainHistory] = useState<ProvinceRainSample[]>([]);
+  const [shelters, setShelters] = useState<ShelterItem[]>([]);
+  const [shelterFilter, setShelterFilter] = useState<string>('Tất cả');
+  const [historicRecords, setHistoricRecords] = useState<HistoricRainRecord[]>([]);
+  const [activeShelterId, setActiveShelterId] = useState<number | null>(null);
+  const [selectedHistoryDetail, setSelectedHistoryDetail] = useState<HistoryDetail | null>(null);
+  const [historyDetailLoadingId, setHistoryDetailLoadingId] = useState<number | null>(null);
+  const liveMonitoringRunnerRef = useRef<((lat: number, lng: number, options?: LiveMonitoringOptions) => Promise<void>) | null>(null);
+  const [showWindyOverlay, setShowWindyOverlay] = useState<boolean>(false);
+  const [windyEmbedUrl, setWindyEmbedUrl] = useState<string>('');
+
+  const handleWindyOverlayClick = useCallback(async (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!showWindyOverlay) return;
+    const map = mapRef.current;
+    if (!map || !liveMonitoringRunnerRef.current) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - bounds.left;
+    const y = event.clientY - bounds.top;
+    const lngLat = map.unproject([x, y]);
+    map.flyTo({ center: [lngLat.lng, lngLat.lat], zoom: map.getZoom(), speed: 1.2 });
+    await liveMonitoringRunnerRef.current(lngLat.lat, lngLat.lng, { focusAnalysis: true, persist: true });
+  }, [showWindyOverlay]);
+
+  const focusProvinceOnMap = (province: string): void => {
+    const centroid = PROVINCE_CENTROID_MAP[province];
+    const map = mapRef.current;
+    if (!centroid || !map) {
+      return;
+    }
+    setIsDashboardOpen(true);
+    map.flyTo({ center: [centroid.longitude, centroid.latitude], zoom: 7.2, speed: 1.1 });
+    if (liveMonitoringRunnerRef.current) {
+      void liveMonitoringRunnerRef.current(centroid.latitude, centroid.longitude, {
+        presetTitle: province,
+        presetSubtitle: province,
+        provinceOverride: province,
+        persist: false,
+        focusAnalysis: false
+      });
+    }
+  };
+
+  const updateProvinceSelection = async (province: string) => {
+    setSelectedProvince(province);
+    focusProvinceOnMap(province);
+    if (!province) {
+      setProvinceRainHistory([]);
+      setHistoricRecords([]);
+      return;
+    }
+    const history = await dbService.getProvinceRainHistory(province, 20);
+    setProvinceRainHistory(history);
+    const historic = await dbService.getHistoricProvinceRecords(province);
+    setHistoricRecords(historic);
+  };
+
+  const focusShelterOnMap = (shelter: ShelterItem) => {
+    const map = mapRef.current;
+    if (!map) return;
+    setIsAIConsoleOpen(true);
+    setIsDashboardOpen(true);
+    setConsoleTab('shelters');
+    setShelterFilter(shelter.province);
+    setActiveShelterId(shelter.shelter_id);
+    map.flyTo({ center: [shelter.longitude, shelter.latitude], zoom: 12, speed: 1.3 });
+    if (liveMonitoringRunnerRef.current) {
+      void liveMonitoringRunnerRef.current(shelter.latitude, shelter.longitude, {
+        presetTitle: shelter.name,
+        presetSubtitle: shelter.address || shelter.province,
+        provinceOverride: shelter.province,
+        persist: false,
+        focusAnalysis: false
+      });
+    }
+  };
+
+  const focusHistoryLocation = (detail: HistoryDetail) => {
+    const map = mapRef.current;
+    const lat = detail.location.latitude;
+    const lng = detail.location.longitude;
+    if (!map || lat === undefined || lng === undefined) {
+      return;
+    }
+    setIsDashboardOpen(true);
+    map.flyTo({ center: [lng, lat], zoom: 12, speed: 1.2 });
+    if (markerRef.current) markerRef.current.remove();
+    const el = document.createElement('div');
+    el.className = 'neon-marker-container';
+    el.innerHTML = `<div class="neon-core"></div><div class="neon-pulse"></div>`;
+    markerRef.current = new maplibregl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([lng, lat])
+      .addTo(map);
+  };
+
+  const openHistoryDetail = async (historyId: number) => {
+    setHistoryDetailLoadingId(historyId);
+    try {
+      const detail = await dbService.getHistoryDetail(historyId);
+      if (!detail) {
+        window.alert('Không tìm thấy dữ liệu chi tiết cho mục này.');
+        return;
+      }
+      setSelectedHistoryDetail(detail);
+      focusHistoryLocation(detail);
+      setIsAIConsoleOpen(true);
+    } catch (error) {
+      console.error('Failed to load history detail:', error);
+      window.alert('Không thể tải chi tiết. Vui lòng thử lại.');
+    } finally {
+      setHistoryDetailLoadingId(null);
+    }
+  };
+
+  const closeHistoryDetail = () => {
+    setSelectedHistoryDetail(null);
+  };
+
+  liveMonitoringRunnerRef.current = async (lat: number, lng: number, options: LiveMonitoringOptions = {}) => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    const { presetTitle, presetSubtitle, provinceOverride, persist = true, focusAnalysis = true } = options;
+    const coordsText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+    if (focusAnalysis) {
+      setConsoleTab('analysis');
+      setAnalyzing(true);
+    } else {
+      setAnalyzing(false);
+    }
+    if (!isDashboardOpen) {
+      setIsDashboardOpen(true);
+    }
+
+    if (markerRef.current) markerRef.current.remove();
+    const markerEl = document.createElement('div');
+    markerEl.className = 'neon-marker-container';
+    markerEl.innerHTML = `<div class="neon-core"></div><div class="neon-pulse"></div>`;
+    markerRef.current = new maplibregl.Marker({ element: markerEl, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
+
+    let line1 = presetTitle || 'Đang xác định vị trí...';
+    let line2 = presetSubtitle || '';
+    let provinceName = provinceOverride || 'Việt Nam';
+
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=vi`);
+      const data = await res.json();
+      if (data?.address) {
+        const a = data.address;
+        const specific = a.house_number || a.road || a.hamlet || a.path || '';
+        const ward = a.suburb || a.town || a.village || a.neighbourhood || a.quarter || '';
+        const district = a.city_district || a.district || a.county || '';
+        const details = [specific, ward, district].filter(Boolean);
+        line1 = details.length === 0 ? (data.name || line1) : details.join(', ');
+        line2 = a.city || a.state || a.province || line2 || 'Việt Nam';
+        provinceName = a.state || a.province || a.city || provinceName || 'Việt Nam';
+      }
+    } catch {
+      if (!presetTitle) line1 = 'Không thể lấy tên địa điểm';
+      if (!presetSubtitle) line2 = coordsText;
+      if (!provinceOverride) provinceName = 'Không xác định';
+    }
+
+    const subtitleValue = line2 || provinceName || 'Việt Nam';
+    const locationIsNamed = hasValidLocationName(line1);
+    const shouldPersist = persist && locationIsNamed;
+    setInputLocation(`${line1}, ${subtitleValue}`);
+
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,cloud_cover,wind_gusts_10m,precipitation,soil_moisture_0_to_1cm&hourly=precipitation&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum&timezone=auto&forecast_days=14`;
+      const wRes = await fetch(url);
+      const wData = await wRes.json();
+      if (wData.current && wData.hourly && wData.daily) {
+        const current = wData.current;
+        const hourlyRain = wData.hourly.precipitation;
+        const dailyRain = wData.daily.precipitation_sum;
+        const currentHourIndex = new Date().getHours();
+
+        const sumRain = (startIdx: number, hoursCount: number) => {
+          let total = 0;
+          for (let i = startIdx; i < startIdx + hoursCount; i++) {
+            if (hourlyRain[i] !== undefined && hourlyRain[i] !== null) total += hourlyRain[i];
+          }
+          return total;
+        };
+        const sumRainDays = (daysCount: number) => {
+          let total = 0;
+          for (let i = 0; i < daysCount; i++) {
+            if (dailyRain[i] !== undefined) total += dailyRain[i];
+          }
+          return total;
+        };
+
+        const newData: DashboardData = {
+          title: line1,
+          subtitle: subtitleValue,
+          coordinates: coordsText,
+          temp: current.temperature_2m,
+          feelsLike: current.apparent_temperature,
+          tempMin: wData.daily.temperature_2m_min[0],
+          tempMax: wData.daily.temperature_2m_max[0],
+          humidity: current.relative_humidity_2m,
+          pressureSea: current.pressure_msl,
+          pressureGround: current.surface_pressure,
+          windSpeed: current.wind_speed_10m,
+          windDir: current.wind_direction_10m,
+          windGusts: current.wind_gusts_10m || current.wind_speed_10m * 1.3,
+          cloudCover: current.cloud_cover,
+          elevation: wData.elevation || 0,
+          uvIndex: wData.daily.uv_index_max[0],
+          rainStats: {
+            h1: sumRain(currentHourIndex, 1),
+            h2: sumRain(currentHourIndex, 2),
+            h3: sumRain(currentHourIndex, 3),
+            h5: sumRain(currentHourIndex, 5),
+            h12: sumRain(currentHourIndex, 12),
+            h24: sumRain(currentHourIndex, 24),
+            d3: sumRainDays(3),
+            d7: sumRainDays(7),
+            d14: sumRainDays(14)
+          },
+          soilMoisture: current.soil_moisture_0_to_1cm || 0.4,
+          status: 'Live'
+        };
+
+        setDashboardInfo(newData);
+
+        const storms = nationalAlertsRef.current.filter(a => a.type.includes('Bão') || a.type.includes('ATNĐ'));
+        let minDistToStorm = 9999;
+        storms.forEach(s => {
+          const d = haversineKm(lat, lng, s.coords[1], s.coords[0]);
+          if (d < minDistToStorm) minDistToStorm = d;
+        });
+
+        setTimeout(async () => {
+          const result = calculateComplexRisk(newData, minDistToStorm);
+          setAiResult(result);
+          setAnalyzing(false);
+
+          if (!shouldPersist) {
+            return;
+          }
+
+          try {
+            const advancedResult = calculateAdvancedRisk(newData, minDistToStorm);
+            await dbService.saveAnalysis(
+              {
+                latitude: lat,
+                longitude: lng,
+                title: line1,
+                subtitle: subtitleValue,
+                elevation: newData.elevation,
+                province: provinceName
+              },
+              {
+                temp: newData.temp,
+                feelsLike: newData.feelsLike,
+                tempMin: newData.tempMin,
+                tempMax: newData.tempMax,
+                humidity: newData.humidity,
+                pressureSea: newData.pressureSea,
+                pressureGround: newData.pressureGround,
+                windSpeed: newData.windSpeed,
+                windDir: newData.windDir,
+                windGusts: newData.windGusts,
+                cloudCover: newData.cloudCover,
+                uvIndex: newData.uvIndex,
+                soilMoisture: newData.soilMoisture
+              },
+              newData.rainStats,
+              {
+                level: advancedResult.level,
+                label: advancedResult.label,
+                score: advancedResult.score,
+                confidence: advancedResult.confidence,
+                actions: advancedResult.actions,
+                terrainType: advancedResult.factors.terrain,
+                soilType: advancedResult.factors.soil,
+                saturation: advancedResult.factors.saturation
+              },
+              advancedResult.reasons
+            );
+
+            const history = await dbService.getHistory(100);
+            const transformedHistory = history.map(item => ({
+              id: item.id,
+              location: item.location,
+              risk: item.risk as RiskLevel,
+              type: item.type,
+              is_favorite: item.is_favorite || 0,
+              created_at: item.created_at
+            }));
+            setHistoryList(transformedHistory);
+
+            if (provinceName && provinceName === selectedProvince) {
+              const rainHistory = await dbService.getProvinceRainHistory(provinceName, 20);
+              setProvinceRainHistory(rainHistory);
+            }
+          } catch (error) {
+            console.error('Error saving to database:', error);
+            if (shouldPersist && result.level >= 2) {
+              setHistoryList(prev => {
+                const now = Date.now();
+                const newItem: HistoryItem = {
+                  id: now,
+                  location: line1,
+                  risk: result.riskLabel,
+                  type: result.level === 4 ? 'Nguy hiểm' : 'Thời tiết xấu'
+                };
+                return [newItem, ...prev].filter(item => (now - item.id) < 864000000);
+              });
+            }
+          }
+        }, 800);
+      }
+    } catch (err) {
+      console.error('Failed to refresh live monitoring:', err);
+      setAnalyzing(false);
+    }
+  };
+
+  // Load history from database on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      const history = await dbService.getHistory(100);
+      // Transform to match HistoryItem interface
+      const transformedHistory = history.map(item => ({
+        id: item.id,
+        location: item.location,
+        risk: item.risk as RiskLevel,
+        type: item.type,
+        is_favorite: item.is_favorite || 0,
+        created_at: item.created_at
+      }));
+      setHistoryList(transformedHistory);
+    };
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
+    const loadProvinceContext = async () => {
+      const provinces = await dbService.getProvinceList();
+      const options = [...VIETNAM_PROVINCES];
+      setProvinceOptions(options);
+      const initialProvince = provinces[0] || options[0] || '';
+      await updateProvinceSelection(initialProvince);
+    };
+
+    const loadShelterData = async () => {
+      const shelterItems = await dbService.getShelters();
+      setShelters(shelterItems);
+    };
+
+    loadProvinceContext();
+    loadShelterData();
+  }, []);
+
+  useEffect(() => {
+    if (!showWindyOverlay) {
+      setWindyEmbedUrl('');
+      return;
+    }
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+    const updateEmbed = () => {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      setWindyEmbedUrl(buildWindyEmbedUrl(center.lat, center.lng, zoom));
+    };
+    updateEmbed();
+    map.on('moveend', updateEmbed);
+    return () => {
+      map.off('moveend', updateEmbed);
+    };
+  }, [showWindyOverlay]);
+
+  useEffect(() => {
+    if (consoleTab !== 'shelters' || activeShelterId === null) return;
+    const card = document.getElementById(`shelter-card-${activeShelterId}`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [activeShelterId, consoleTab]);
+
   // Sync ref with state
   useEffect(() => {
     nationalAlertsRef.current = nationalAlerts;
   }, [nationalAlerts]);
+
+
+  // Toggle rain layer visibility
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    
+    // Wait for layer to be created, then toggle
+    const toggleRainLayer = (retries = 0) => {
+      if (map.getLayer('rain-layer')) {
+        const visibility = showRainLayer ? 'visible' : 'none';
+        map.setLayoutProperty('rain-layer', 'visibility', visibility);
+        console.log('Rain layer toggled to:', visibility, 'showRainLayer:', showRainLayer);
+      } else {
+        // Layer not ready yet, retry after short delay (max 5 seconds)
+        if (retries < 50) {
+          setTimeout(() => toggleRainLayer(retries + 1), 100);
+        } else {
+          console.warn('Rain layer not found after 5 seconds');
+        }
+      }
+    };
+    
+    toggleRainLayer();
+  }, [showRainLayer]);
 
   // --- SYSTEM SCAN: REAL DATA ONLY (GDACS) ---
   const fetchRealStorms = async () => {
@@ -493,8 +973,21 @@ const SafeWaveApp = () => {
         if (cache.gdacs.data && (now - cache.gdacs.time < cache.ttl)) {
             gdacsData = cache.gdacs.data;
         } else {
+            // Luôn thử dùng IPC handler trước (hoạt động cả dev và production)
+            if (window.safewave?.fetchGdacs) {
+                try {
+                    gdacsData = await window.safewave.fetchGdacs();
+                } catch (ipcError) {
+                    console.warn('IPC fetch failed, trying proxy:', ipcError);
+                    // Fallback: thử proxy trong dev hoặc fetch trực tiếp
             const gdacsUrl = '/api-gdacs/gdacsapi/api/events/geteventlist/MAP?eventtypes=TC';
             gdacsData = await fetchWithBackoff(gdacsUrl);
+                }
+            } else {
+                // Fallback nếu không có IPC (shouldn't happen)
+                const gdacsUrl = '/api-gdacs/gdacsapi/api/events/geteventlist/MAP?eventtypes=TC';
+                gdacsData = await fetchWithBackoff(gdacsUrl);
+            }
             cache.gdacs = { data: gdacsData, time: now };
         }
 
@@ -547,8 +1040,34 @@ const SafeWaveApp = () => {
         // UPDATE LAYER CHO TẤT CẢ BÃO (Hiển thị đa điểm)
         updateStormLayers(detectedStorms.length > 0 ? detectedStorms : null);
 
-        setNationalAlerts(clusterAlerts(alerts, 50));
+
+        const clusteredAlerts = clusterAlerts(alerts, 50);
+        setNationalAlerts(clusteredAlerts);
         setLastScanTime(new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}));
+
+        
+        // Save alerts to database
+        try {
+            for (const alert of clusteredAlerts) {
+                await dbService.saveAlert({
+                    externalId: String(alert.id),
+                    locationName: alert.location,
+                    province: alert.province,
+                    level: alert.level,
+                    type: alert.type,
+                    latitude: alert.coords[1],
+                    longitude: alert.coords[0],
+                    rainAmount: alert.rainAmount,
+                    windSpeed: alert.windSpeed,
+                    description: alert.description,
+                    source: alert.source || 'GDACS',
+                    isCluster: alert.isCluster || false,
+                    clusterCount: alert.count || 1
+                });
+            }
+        } catch (error) {
+            console.error('Error saving alerts to database:', error);
+        }
 
     } catch (e) {
         console.error("System Scan Critical Error:", e);
@@ -655,6 +1174,31 @@ const SafeWaveApp = () => {
     });
   }, [nationalAlerts]);
 
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    shelterMarkersRef.current.forEach(marker => marker.remove());
+    shelterMarkersRef.current = [];
+    shelters.forEach(shelter => {
+      const el = document.createElement('div');
+      el.className = 'flex items-center justify-center cursor-pointer group';
+      el.innerHTML = `<div class="relative rounded-full border-2 border-white/40 bg-emerald-500/80 text-white w-8 h-8 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path d="M3 10l9-7 9 7" />
+          <path d="M4 10v10h16V10" />
+          <path d="M9 21V12h6v9" />
+        </svg>
+      </div>`;
+      const marker = new maplibregl.Marker({ element: el }).setLngLat([shelter.longitude, shelter.latitude]).addTo(map);
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        focusShelterOnMap(shelter);
+      });
+      shelterMarkersRef.current.push(marker);
+    });
+  }, [shelters]);
+
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
@@ -704,137 +1248,74 @@ const SafeWaveApp = () => {
           paint: { 'line-color': '#06b6d4', 'line-width': 2, 'line-dasharray': [2, 2], 'line-opacity': 0.8 }
       });
 
-      try {
-        const rvRes = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-        if (rvRes.ok) {
-            const rvData = await rvRes.json();
-            const latestRadar = rvData.radar?.past?.at(-1);
-            if (latestRadar) {
-                map.addSource('rain-source', { type: 'raster', tiles: [`https://tile.rainviewer.com/v2/radar/${latestRadar.time}/256/{z}/{x}/{y}/2/1_1.png`], tileSize: 256 });
-                map.addLayer({ id: 'rain-layer', type: 'raster', source: 'rain-source', paint: { 'raster-opacity': 0.8 }, layout: { visibility: 'none' } });
-            }
+
+      const loadRainLayer = () => {
+        if (map.getSource('rain-source')) {
+          return;
         }
-      } catch (e) {
-          console.warn("RainViewer unavailable");
-      }
+        const tiles = [`${WINDY_RADAR_TILES}?t=${Date.now()}`];
+        map.addSource('rain-source', { 
+          type: 'raster', 
+          tiles,
+          tileSize: 256,
+          attribution: WINDY_ATTRIBUTION
+        });
+        map.addLayer({ 
+          id: 'rain-layer', 
+          type: 'raster', 
+          source: 'rain-source', 
+          paint: { 'raster-opacity': 0.7 },
+          layout: { visibility: showRainLayer ? 'visible' : 'none' }
+        });
+        setRainLayerTime(Math.floor(Date.now() / 1000));
+        console.log('Windy radar layer initialized.');
+      };
+      loadRainLayer();
 
       // --- LOGIC CLICK ---
       map.on('click', async (e) => {
         const { lng, lat } = e.lngLat;
-        const coordsText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-        
-        if (markerRef.current) markerRef.current.remove();
-        const el = document.createElement('div'); el.className = 'neon-marker-container'; 
-        el.innerHTML = `<div class="neon-core"></div><div class="neon-pulse"></div>`;
-        markerRef.current = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
 
-        setConsoleTab('analysis'); 
-        setAnalyzing(true);
-        if(!isDashboardOpen) setIsDashboardOpen(true);
-
-        // Geocoding
-        let line1 = 'Đang xác định vị trí...', line2 = '';
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=vi`);
-            const data = await res.json();
-            
-            if (data?.address) {
-                const a = data.address;
-                const specific = a.house_number || a.road || a.hamlet || a.path || '';
-                const ward = a.suburb || a.town || a.village || a.neighbourhood || a.quarter || '';
-                const district = a.city_district || a.district || a.county || '';
-                const details = [specific, ward, district].filter(Boolean);
-                line1 = details.length === 0 ? (data.name || 'Khu vực tự nhiên') : details.join(', ');
-                line2 = a.city || a.state || a.province || 'Việt Nam';
+        if (liveMonitoringRunnerRef.current) {
+          await liveMonitoringRunnerRef.current(lat, lng, { focusAnalysis: true, persist: true });
             }
-        } catch (e) {
-            line1 = 'Không thể lấy tên địa điểm';
-            line2 = coordsText;
-        }
-        setInputLocation(`${line1}, ${line2}`);
-
-        try {
-            // Lấy dữ liệu dự báo 14 ngày để phân tích xu hướng
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,cloud_cover,wind_gusts_10m,precipitation,soil_moisture_0_to_1cm&hourly=precipitation&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum&timezone=auto&forecast_days=14`;
-            const wRes = await fetch(url);
-            const wData = await wRes.json();
-            if (wData.current && wData.hourly && wData.daily) {
-                    const current = wData.current;
-                    const hourlyRain = wData.hourly.precipitation; 
-                    const dailyRain = wData.daily.precipitation_sum;
-                    const currentHourIndex = new Date().getHours(); 
-
-                    const sumRain = (startIdx: number, hoursCount: number) => {
-                        let total = 0;
-                        for (let i = startIdx; i < startIdx + hoursCount; i++) {
-                            if (hourlyRain[i] !== undefined && hourlyRain[i] !== null) total += hourlyRain[i];
-                        }
-                        return total;
-                    };
-                    const sumRainDays = (daysCount: number) => {
-                        let total = 0;
-                        for(let i = 0; i < daysCount; i++) {
-                            if (dailyRain[i] !== undefined) total += dailyRain[i];
-                        }
-                        return total;
-                    };
-                    
-                    const newData: DashboardData = {
-                        title: line1, subtitle: line2, coordinates: coordsText,
-                        temp: current.temperature_2m, feelsLike: current.apparent_temperature,
-                        tempMin: wData.daily.temperature_2m_min[0], tempMax: wData.daily.temperature_2m_max[0],
-                        humidity: current.relative_humidity_2m, pressureSea: current.pressure_msl, pressureGround: current.surface_pressure,
-                        windSpeed: current.wind_speed_10m, windDir: current.wind_direction_10m, 
-                        windGusts: current.wind_gusts_10m || (current.wind_speed_10m * 1.3),
-                        cloudCover: current.cloud_cover, elevation: wData.elevation || 0, uvIndex: wData.daily.uv_index_max[0],
-                        rainStats: { 
-                            h1: sumRain(currentHourIndex, 1), h2: sumRain(currentHourIndex, 2), h3: sumRain(currentHourIndex, 3), 
-                            h5: sumRain(currentHourIndex, 5), h12: sumRain(currentHourIndex, 12), h24: sumRain(currentHourIndex, 24), 
-                            d3: sumRainDays(3), // DỰ BÁO 3 NGÀY TỚI
-                            d7: sumRainDays(7), // DỰ BÁO 7 NGÀY TỚI
-                            d14: sumRainDays(14) 
-                        },
-                        soilMoisture: current.soil_moisture_0_to_1cm || 0.4, status: 'Live'
-                    };
-
-                    setDashboardInfo(newData);
-                    
-                    // --- NEAREST STORM LOGIC ---
-                    const storms = nationalAlertsRef.current.filter(a => a.type.includes('Bão') || a.type.includes('ATNĐ'));
-                    let minDistToStorm = 9999;
-                    
-                    storms.forEach(s => {
-                        const d = haversineKm(lat, lng, s.coords[1], s.coords[0]);
-                        if (d < minDistToStorm) minDistToStorm = d;
-                    });
-                    
-                    setTimeout(() => {
-                        // Gọi hàm phân tích nâng cấp với dữ liệu dự báo
-                        const result = calculateComplexRisk(newData, minDistToStorm);
-                        setAiResult(result);
-                        setAnalyzing(false);
-                        if (result.level >= 2) {
-                            setHistoryList(prev => {
-                                const now = Date.now();
-                                const newItem: HistoryItem = { 
-                                    id: now, location: line1, 
-                                    risk: result.riskLabel, type: result.level === 4 ? 'Nguy hiểm' : 'Thời tiết xấu'
-                                };
-                                return [newItem, ...prev].filter(item => (now - item.id) < 864000000); 
-                            });
-                        }
-                    }, 800);
-            }
-        } catch (err) { setAnalyzing(false); }
       });
     });
   }, []); 
+
+
+
+  const latestProvinceSample = provinceRainHistory[0];
+  const historicMaxRecord = historicRecords.reduce<HistoricRainRecord | null>((top, record) => {
+    if (!top || record.h24 > top.h24) {
+      return record;
+    }
+    return top;
+  }, null);
+  const shelterProvinceOptions = Array.from(new Set(shelters.map(s => s.province))).sort();
+  const filteredShelters = shelterFilter === 'Tất cả' ? shelters : shelters.filter(s => s.province === shelterFilter);
 
   return (
     <div className="relative w-full h-screen bg-[#020408] text-slate-200 overflow-hidden font-sans selection:bg-cyan-500/30">
       
       {/* MAP CONTAINER */}
       <div className="absolute inset-0 z-0"><div ref={mapContainerRef} className="w-full h-full bg-[#05060a]"/></div>
+
+      <div
+        className={`absolute inset-0 transition-opacity duration-300 ${showWindyOverlay ? 'z-20 opacity-100 cursor-crosshair' : 'pointer-events-none opacity-0'}`}
+        onClick={handleWindyOverlayClick}
+      >
+        {showWindyOverlay && windyEmbedUrl && (
+          <iframe
+            src={windyEmbedUrl}
+            title="Windy Overlay"
+            className="w-full h-full border-none"
+            frameBorder="0"
+            allowFullScreen
+            style={{ pointerEvents: 'none' }}
+          />
+        )}
+      </div>
 
       {/* DASHBOARD CARD */}
       {isDashboardOpen ? (
@@ -891,7 +1372,8 @@ const SafeWaveApp = () => {
                   <button onClick={() => setIsAIConsoleOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition"><Minus size={16}/></button>
                </div>
                <div className="flex px-4 pb-0 gap-6 text-sm font-medium relative">
-                  {[{ id: 'analysis', label: 'Phân tích', color: 'cyan' }, { id: 'alerts', label: 'Cảnh báo', color: 'red' }, { id: 'history', label: 'Lịch sử', color: 'purple' }].map(tab => (
+
+                  {[{ id: 'analysis', label: 'Phân tích', color: 'cyan' }, { id: 'alerts', label: 'Cảnh báo', color: 'red' }, { id: 'history', label: 'Lịch sử', color: 'purple' }, { id: 'rain', label: 'Mưa tỉnh', color: 'blue' }, { id: 'shelters', label: 'Điểm trú', color: 'emerald' }].map(tab => (
                     <button key={tab.id} onClick={() => setConsoleTab(tab.id as any)} className={`pb-3 relative transition-colors ${consoleTab === tab.id ? `text-${tab.color}-400 text-glow-${tab.color === 'cyan' || tab.color === 'red' ? tab.color : 'purple'}` : 'text-gray-500 hover:text-gray-300'}`}>{tab.label}{consoleTab === tab.id && <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-${tab.color}-400 shadow-[0_0_10px_${tab.color === 'cyan' ? '#22d3ee' : tab.color === 'red' ? '#ef4444' : '#c084fc'}]`}></span>}</button>
                   ))}
                </div>
@@ -970,24 +1452,289 @@ const SafeWaveApp = () => {
               {/* TAB 3: LỊCH SỬ */}
               {consoleTab === 'history' && (
                   <div className="flex flex-col gap-3">
-                      {historyList.length === 0 ? <div className="text-center py-8 text-gray-500 text-xs">Chưa có dữ liệu rủi ro.</div> : historyList.map((item) => (
-                          <div key={item.id} className="bg-[#0b0f16]/60 border border-white/5 hover:border-white/10 rounded-xl p-3 transition flex gap-3 items-center group cursor-pointer">
-                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${item.risk === 'Nguy hiểm' ? 'bg-red-500/10 text-red-500' : item.risk === 'Cảnh báo' ? 'bg-orange-500/10 text-orange-500' : item.risk === 'Nhẹ' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}><History size={18}/></div>
+
+                      {historyList.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500 text-xs">Chưa có dữ liệu rủi ro.</div>
+                      ) : (
+                          historyList.map((item) => {
+                              const isFavorite = item.is_favorite === 1;
+                              const isLoadingDetail = historyDetailLoadingId === item.id;
+                              return (
+                                  <div
+                                      key={item.id}
+                                      onClick={() => openHistoryDetail(item.id)}
+                                      className="bg-[#0b0f16]/60 border border-white/5 hover:border-white/15 rounded-xl p-3 transition flex gap-3 items-center group relative cursor-pointer"
+                                  >
+                                      {isLoadingDetail && (
+                                          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl flex items-center justify-center text-xs font-bold text-white">
+                                              Đang tải...
+                                          </div>
+                                      )}
+                                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${item.risk === 'Nguy hiểm' ? 'bg-red-500/10 text-red-500' : item.risk === 'Cảnh báo' ? 'bg-orange-500/10 text-orange-500' : item.risk === 'Nhẹ' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}>
+                                          <History size={18}/>
+                                      </div>
                               <div className="flex-1 min-w-0">
                                   <div className="flex justify-between items-start">
-                                      <h4 className="text-xs font-bold text-gray-200 truncate pr-2">{item.location}</h4>
-                                      <span className="text-[9px] font-mono text-gray-500 shrink-0 flex items-center gap-1"><Clock size={8}/> {formatHistoryTime(item.id)}</span>
+
+                                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                  {isFavorite && <Star size={12} className="text-yellow-400 fill-yellow-400 shrink-0"/>}
+                                                  <h4 className="text-xs font-bold text-gray-200 truncate">{item.location}</h4>
                                   </div>
-                                  <div className="flex items-center gap-2 mt-1"><span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-white/5 border-white/10 text-gray-400">{item.type}</span></div>
+
+                                              <span className="text-[9px] font-mono text-gray-500 shrink-0 flex items-center gap-1 ml-2"><Clock size={8}/> {item.created_at ? formatHistoryTime(new Date(item.created_at).getTime()) : '--'}</span>
+                              </div>
+
+                                          <div className="flex items-center gap-2 mt-1">
+                                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-white/5 border-white/10 text-gray-400">{item.type}</span>
+                          </div>
+
+                                      </div>
+                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button
+                                              onClick={async (e) => {
+                                                  e.stopPropagation();
+                                                  const result = await dbService.toggleFavorite(item.id);
+                                                  if (result.success) {
+                                                      // Reload history
+                                                      const history = await dbService.getHistory(100);
+                                                      const transformedHistory = history.map(h => ({
+                                                          id: h.id,
+                                                          location: h.location,
+                                                          risk: h.risk as RiskLevel,
+                                                          type: h.type,
+                                                          is_favorite: h.is_favorite || 0,
+                                                          created_at: h.created_at
+                                                      }));
+                                                      setHistoryList(transformedHistory);
+                                                  }
+                                              }}
+                                              className={`p-1.5 rounded-lg transition ${
+                                                  isFavorite 
+                                                      ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
+                                                      : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-yellow-400'
+                                              }`}
+                                              title={isFavorite ? 'Bỏ yêu thích' : 'Đánh dấu yêu thích'}
+                                          >
+                                              <Star size={14} className={isFavorite ? 'fill-current' : ''}/>
+                                          </button>
+                                          <button
+                                              onClick={async (e) => {
+                                                  e.stopPropagation();
+                                                  e.preventDefault();
+                                                  if (window.confirm('Bạn có chắc muốn xóa mục này?')) {
+                                                      try {
+                                                          console.log('Deleting history item with ID:', item.id, 'Type:', typeof item.id);
+                                                          const result = await dbService.deleteHistory(item.id);
+                                                          console.log('Delete result:', result);
+                                                          if (result.success) {
+                                                              // Remove from list
+                                                              setHistoryList(prev => prev.filter(h => h.id !== item.id));
+                                                          } else {
+                                                              console.error('Delete failed:', result.error);
+                                                              window.alert('Không thể xóa: ' + (result.error || 'Lỗi không xác định'));
+                                                          }
+                                                      } catch (error) {
+                                                          console.error('Delete error:', error);
+                                                          window.alert('Lỗi khi xóa: ' + String(error));
+                                                      }
+                                                  }
+                                              }}
+                                              className="p-1.5 rounded-lg bg-white/5 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition"
+                                              title="Xóa mục này"
+                                          >
+                                              <Trash2 size={14}/>
+                                          </button>
+                                      </div>
+                                  </div>
+                              );
+                          })
+                      )}
+                  </div>
+              )}
+
+              {/* TAB 4: MƯA THEO TỈNH */}
+              {consoleTab === 'rain' && (
+                  <div className="flex flex-col gap-4">
+                      <div>
+                          <label className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">Chọn tỉnh / thành phố</label>
+                          <div className="flex items-center gap-2 mt-2">
+                              <Map size={14} className="text-blue-400" />
+                              <select
+                                  value={selectedProvince}
+                                  onChange={(e) => updateProvinceSelection(e.target.value)}
+                                  className="flex-1 bg-[#05060a]/50 border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:border-blue-500/50 outline-none"
+                              >
+                                  {provinceOptions.map((province) => (
+                                      <option key={province} value={province}>{province}</option>
+                                  ))}
+                              </select>
+                  </div>
+
+                        </div>
+                        {latestProvinceSample ? (
+                            <>
+                          <div className="bg-[#0b0f16]/60 border border-white/5 rounded-2xl p-4 flex flex-col gap-4">
+                              <div className="flex items-center justify-between">
+                                  <div>
+                                      <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Tổng hợp 24h qua</div>
+                                      <div className="text-lg font-bold text-white">{selectedProvince}</div>
+                                  </div>
+                                  <div className="text-[10px] text-gray-500">{new Date(latestProvinceSample.recorded_at).toLocaleString('vi-VN')}</div>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                  {[{ label: '1h', value: latestProvinceSample.h1, tone: 'text-blue-300' },
+                                    { label: '3h', value: latestProvinceSample.h3, tone: 'text-cyan-300' },
+                                    { label: '24h', value: latestProvinceSample.h24, tone: 'text-indigo-300' },
+                                    { label: '3 ngày', value: latestProvinceSample.d3, tone: 'text-emerald-300' },
+                                    { label: '7 ngày', value: latestProvinceSample.d7, tone: 'text-amber-300' },
+                                    { label: '14 ngày', value: latestProvinceSample.d14, tone: 'text-red-300' }].map((item, idx) => (
+                                      <div key={idx} className="bg-white/5 rounded-lg p-3 border border-white/5">
+                                          <div className="text-[9px] uppercase text-gray-500 font-bold">{item.label}</div>
+                                          <div className={`text-xl font-bold ${item.tone}`}>{item.value.toFixed(1)}<span className="text-[10px] text-gray-400 ml-1">mm</span></div>
+                                      </div>
+                                  ))}
                               </div>
                           </div>
-                      ))}
+                            <div className="mt-4 bg-white/5 rounded-xl p-3 border border-white/5">
+                                <div className="flex items-center justify-between text-[10px] text-gray-500 uppercase font-bold">
+                                    <span className="flex items-center gap-1"><CloudRain size={12}/> Lịch sử mưa lớn nhất</span>
+                                    {historicMaxRecord && historicMaxRecord.h24 > 0 && (
+                                        <span>{new Date(historicMaxRecord.recorded_at).toLocaleDateString('vi-VN')}</span>
+              )}
+           </div>
+                                {historicMaxRecord && historicMaxRecord.h24 > 0 ? (
+                                    <>
+                                        <div className="mt-2 text-2xl font-bold text-blue-300">
+                                            {historicMaxRecord.h24.toFixed(1)}
+                                            <span className="text-sm text-gray-400 ml-1">mm</span>
+                                        </div>
+                                        <div className="mt-1 text-[11px] text-gray-400">
+                                            {historicMaxRecord.location_note || selectedProvince}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-xs text-gray-500 mt-2">Chưa có thống kê cho tỉnh này.</div>
+                                )}
+                            </div>
+                            </>
+                        ) : (
+                          <div className="text-xs text-gray-500 text-center py-6">Chưa có dữ liệu realtime cho tỉnh này. Hệ thống sẽ tự động cập nhật khi collector lấy mẫu mới.</div>
+                      )}
+                      {/* Removed historical press list per request */}
+                  </div>
+              )}
+
+              {/* TAB 5: ĐIỂM TRÚ BÃO */}
+              {consoleTab === 'shelters' && (
+                  <div className="flex flex-col gap-4">
+                      <div>
+                          <label className="text-[10px] uppercase text-gray-500 font-bold tracking-wider">Lọc theo khu vực</label>
+                          <div className="flex items-center gap-2 mt-2">
+                              <Building size={14} className="text-emerald-400" />
+                              <select
+                                  value={shelterFilter}
+                                  onChange={(e) => setShelterFilter(e.target.value)}
+                                  className="flex-1 bg-[#05060a]/50 border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:border-emerald-500/50 outline-none"
+                              >
+                                  <option value="Tất cả">Tất cả</option>
+                                  {shelterProvinceOptions.map((province) => (
+                                      <option key={province} value={province}>{province}</option>
+                                  ))}
+                              </select>
+                          </div>
+                      </div>
+                      {filteredShelters.length === 0 ? (
+                          <div className="text-xs text-gray-500 text-center py-6">Chưa có điểm trú phù hợp bộ lọc.</div>
+                      ) : (
+                          filteredShelters.map((shelter) => {
+                              const isActive = activeShelterId === shelter.shelter_id;
+                              return (
+                              <div
+                                  key={shelter.shelter_id}
+                                  id={`shelter-card-${shelter.shelter_id}`}
+                                  className={`bg-[#0b0f16]/60 border rounded-2xl p-4 flex flex-col gap-2 transition ${
+                                      isActive ? 'border-emerald-400/80 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.25)]' : 'border-white/5 hover:border-emerald-400/40'
+                                  }`}
+                              >
+                                  <div className="flex items-center justify-between gap-3">
+                                      <div>
+                                          <div className="text-xs font-bold text-white">{shelter.name}</div>
+                                          <div className="text-[10px] text-gray-500">{shelter.address || 'Đang cập nhật'} · {shelter.province}</div>
+                                      </div>
+                                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${shelter.status === 'Limited' ? 'border-amber-400/40 text-amber-300' : 'border-emerald-400/40 text-emerald-300'}`}>
+                                          {shelter.status || 'Available'}
+                                      </span>
+                                  </div>
+                                  <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                                      <span className="flex items-center gap-1"><Users size={12}/> {shelter.capacity ? `${shelter.capacity} người` : 'Chưa rõ'}</span>
+                                      <span className="flex items-center gap-1"><PhoneCall size={12}/> {shelter.contact || '---'}</span>
+                                  </div>
+                                  <button
+                                      onClick={() => focusShelterOnMap(shelter)}
+                                      className="mt-2 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-emerald-400 hover:text-white bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2 px-3 transition"
+                                  >
+                                      <MapPin size={12}/> Định vị trên bản đồ
+                                  </button>
+                              </div>
+                          );})
+                      )}
                   </div>
               )}
            </div>
         </div>
       ) : (
         <button onClick={() => setIsAIConsoleOpen(true)} className="absolute top-6 z-30 h-12 px-5 rounded-2xl bg-[#05060a]/80 backdrop-blur-md border border-white/10 flex items-center gap-2 shadow-xl hover:border-blue-500/50 transition-all group" style={{ right: 24 }}><ShieldCheck size={18} className="text-blue-400 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"/><span className="text-white text-xs font-bold">AI Reports</span></button>
+      )}
+
+
+      {/* RAIN LAYER TOGGLE BUTTON */}
+      <button
+        onClick={() => setShowRainLayer(!showRainLayer)}
+        className={`absolute top-24 right-6 z-30 h-12 px-4 rounded-2xl backdrop-blur-md border flex items-center gap-2 shadow-xl transition-all group ${
+          showRainLayer 
+            ? 'bg-blue-600/20 border-blue-500/50 hover:bg-blue-600/30' 
+            : 'bg-[#05060a]/80 border-white/10 hover:border-blue-500/50'
+        }`}
+        title={showRainLayer ? 'Tắt hiển thị mưa' : 'Bật hiển thị mưa'}
+      >
+        <CloudRain 
+          size={18} 
+          className={showRainLayer ? 'text-blue-400 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]' : 'text-gray-400 group-hover:text-blue-400'} 
+        />
+        <span className={`text-xs font-bold ${showRainLayer ? 'text-blue-400' : 'text-white'}`}>
+          {showRainLayer ? 'Mưa: BẬT' : 'Mưa: TẮT'}
+        </span>
+        {showRainLayer && (
+          <div className="absolute inset-0 rounded-2xl bg-blue-500/10 animate-pulse"></div>
+        )}
+      </button>
+
+      <button
+        onClick={() => setShowWindyOverlay(!showWindyOverlay)}
+        className={`absolute top-40 right-6 z-30 h-12 px-4 rounded-2xl backdrop-blur-md border flex items-center gap-2 shadow-xl transition-all group ${
+          showWindyOverlay
+            ? 'bg-emerald-600/20 border-emerald-500/50 hover:bg-emerald-600/30'
+            : 'bg-[#05060a]/80 border-white/10 hover:border-emerald-500/50'
+        }`}
+        title={showWindyOverlay ? 'Tắt lớp gió Windy' : 'Bật lớp gió Windy'}
+      >
+        <Wind size={18} className={showWindyOverlay ? 'text-emerald-300' : 'text-gray-400 group-hover:text-emerald-300'} />
+        <span className={`text-xs font-bold ${showWindyOverlay ? 'text-emerald-300' : 'text-white'}`}>
+          {showWindyOverlay ? 'Windy: BẬT' : 'Windy: TẮT'}
+        </span>
+        {showWindyOverlay && (
+          <div className="absolute inset-0 rounded-2xl bg-emerald-500/10 animate-pulse"></div>
+        )}
+      </button>
+
+      {/* RAIN LAYER INFO */}
+      {showRainLayer && rainLayerTime && (
+        <div className="absolute bottom-6 right-6 z-30 px-3 py-2 rounded-xl bg-[#05060a]/90 backdrop-blur-md border border-blue-500/30 text-xs text-blue-300">
+          <div className="flex items-center gap-2">
+            <CloudRain size={14} />
+            <span>Radar mưa (Windy): {new Date(rainLayerTime * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+        </div>
       )}
 
       {/* POPUP MODAL */}
@@ -1013,8 +1760,105 @@ const SafeWaveApp = () => {
               );
           })()
       )}
+
+
+      {selectedHistoryDetail && (
+          (() => {
+              const detail = selectedHistoryDetail;
+              const rainStats = detail.rainStats;
+              const weather = detail.weather;
+              const analysis = detail.analysis;
+              return (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                      <div className="w-full max-w-xl bg-[#05060a]/95 border border-white/10 rounded-3xl p-6 relative shadow-2xl">
+                          <button onClick={closeHistoryDetail} className="absolute top-4 right-4 text-gray-400 hover:text-white transition"><X size={18}/></button>
+                          <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                              <div>
+                                  <div className="text-[10px] uppercase text-gray-500 font-bold">Lưu lúc {new Date(detail.created_at).toLocaleString('vi-VN')}</div>
+                                  <h3 className="text-xl font-bold text-white leading-tight mt-1">{detail.location.title}</h3>
+                                  <div className="text-sm text-gray-400">{detail.location.subtitle || detail.location.province || 'Không rõ'}</div>
+                              </div>
+                              <div className={`px-3 py-1 rounded-xl text-[11px] font-bold ${detail.risk === 'Nguy hiểm' ? 'bg-red-500/15 text-red-300 border border-red-500/40' : detail.risk === 'Cảnh báo' ? 'bg-orange-500/15 text-orange-300 border border-orange-500/40' : detail.risk === 'Nhẹ' ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/30' : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'}`}>
+                                  {detail.risk}
+                              </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 mt-4">
+                              <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                                  <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Nhiệt độ</div>
+                                  <div className="text-3xl font-bold text-white">{weather.temp !== undefined ? `${Math.round(weather.temp)}°` : '--'}</div>
+                                  <div className="text-[10px] text-gray-400">Feels like {weather.feelsLike !== undefined ? `${Math.round(weather.feelsLike)}°` : '--'}</div>
+                              </div>
+                              <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                                  <div className="text-[10px] text-gray-500 uppercase font-bold mb-1">Độ ẩm</div>
+                                  <div className="text-3xl font-bold text-blue-300">{weather.humidity !== undefined ? `${weather.humidity}%` : '--'}</div>
+                                  <div className="text-[10px] text-gray-400">Áp suất {weather.pressureSea !== undefined ? `${weather.pressureSea} hPa` : '--'}</div>
+                              </div>
+                              <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                                  <div className="text-[10px] text-gray-500 uppercase font-bold mb-1 flex items-center gap-1"><Wind size={12}/> Gió trung bình</div>
+                                  <div className="text-2xl font-bold text-white">{weather.windSpeed !== undefined ? `${weather.windSpeed.toFixed(1)} km/h` : '--'}</div>
+                                  <div className="text-[10px] text-gray-400">Hướng {weather.windDir ?? '--'}° · Giật {weather.windGusts ? `${weather.windGusts.toFixed(1)} km/h` : '--'}</div>
+                              </div>
+                              <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                                  <div className="text-[10px] text-gray-500 uppercase font-bold mb-1"><Droplets size={12}/> Độ bão hòa</div>
+                                  <div className="text-2xl font-bold text-emerald-300">{analysis.saturation !== undefined ? `${Math.round(analysis.saturation)}%` : '--'}</div>
+                                  <div className="text-[10px] text-gray-400">Độ tin cậy {analysis.confidence !== undefined ? `${Math.round(analysis.confidence * 100)}%` : '--'}</div>
+                              </div>
+                          </div>
+                          <div className="mt-4">
+                              <div className="text-[10px] text-gray-500 uppercase font-bold mb-2 flex items-center gap-2"><CloudRain size={12}/> Lượng mưa ghi nhận</div>
+                              <div className="grid grid-cols-3 gap-2 text-center">
+                                  {[{ label: '1h', value: rainStats.h1 }, { label: '3h', value: rainStats.h3 }, { label: '24h', value: rainStats.h24 }, { label: '3 ngày', value: rainStats.d3 }, { label: '7 ngày', value: rainStats.d7 }, { label: '14 ngày', value: rainStats.d14 }].map((rs, idx) => (
+                                      <div key={idx} className="bg-[#0b0f16]/70 border border-white/5 rounded-xl p-2">
+                                          <div className="text-[9px] text-gray-500 uppercase font-bold">{rs.label}</div>
+                                          <div className="text-lg font-bold text-white">{rs.value !== undefined ? rs.value.toFixed(1) : '--'}<span className="text-[10px] text-gray-500 ml-1">mm</span></div>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                          {detail.reasons.length > 0 && (
+                              <div className="mt-4">
+                                  <div className="text-[10px] text-gray-500 uppercase font-bold mb-2">Nguyên nhân chính</div>
+                                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                      {detail.reasons.map((reason, idx) => (
+                                          <div key={`${reason.code}-${idx}`} className="bg-white/5 border border-white/5 rounded-xl p-2 text-sm text-gray-300">
+                                              <div className="font-semibold text-white">{reason.description || reason.code}</div>
+                                              <div className="text-[10px] text-gray-500 mt-0.5 uppercase flex justify-between">
+                                                  <span>{reason.source}</span>
+                                                  <span className="text-emerald-300 font-bold">+{reason.score?.toFixed(1) || '0'}</span>
+                                              </div>
+                                          </div>
+                                      ))}
+                                  </div>
+                              </div>
+                          )}
+                          {analysis.actions && (
+                              <div className="mt-4 bg-amber-500/10 border border-amber-500/20 text-amber-100 text-sm rounded-2xl p-3">
+                                  <div className="text-[10px] uppercase font-bold mb-1">Khuyến nghị</div>
+                                  <p>{analysis.actions}</p>
+                              </div>
+                          )}
+                          <div className="mt-5 flex items-center justify-between gap-3">
+                              <button
+                                  onClick={() => focusHistoryLocation(detail)}
+                                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30 hover:bg-blue-500/25 transition"
+                              >
+                                  <MapPin size={14}/> Định vị trên bản đồ
+                              </button>
+                              <button
+                                  onClick={closeHistoryDetail}
+                                  className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-white/10 hover:bg-white/20 border border-white/20 transition"
+                              >
+                                  Đóng
+                              </button>
+                        </div>
+                    </div>
+                </div>
+              );
+          })()
+      )}
     </div>
   );
 };
+
 
 export default SafeWaveApp;

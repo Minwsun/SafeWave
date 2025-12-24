@@ -1,0 +1,253 @@
+<mxfile host="Electron" modified="2025-12-15T18:00:00.000Z" agent="SafeWave" version="24.4.0" type="device" pages="4">
+  <diagram id="SEQ_ANALYZE" name="Seq 1 - Phân tích rủi ro vị trí">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Lifelines -->
+        <mxCell id="lif_user" value="User" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="100" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="lif_ui" value="SafeWave UI&#10;(App.tsx)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="360" y="60" width="130" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="lif_engine" value="Risk Engine" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="640" y="60" width="120" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="lif_api" value="Open-Meteo API" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="900" y="60" width="140" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="lif_db" value="SQLite DB" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="60" width="120" height="560" as="geometry" />
+        </mxCell>
+        <!-- Messages -->
+        <mxCell id="m1" value="Chọn điểm trên bản đồ / yêu cầu phân tích" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="lif_user" target="lif_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="140" as="sourcePoint" />
+            <mxPoint x="0" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="fetchWeatherAndRain(lat, lon)" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="lif_ui" target="lif_api">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="190" as="sourcePoint" />
+            <mxPoint x="0" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="Dữ liệu thời tiết + mưa" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="lif_api" target="lif_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="230" as="sourcePoint" />
+            <mxPoint x="0" y="230" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="calculateAdvancedRisk(data)" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="lif_ui" target="lif_engine">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="280" as="sourcePoint" />
+            <mxPoint x="0" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="Kết quả rủi ro (level, reasons, actions)" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="lif_engine" target="lif_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="320" as="sourcePoint" />
+            <mxPoint x="0" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="saveAnalysis(location, weather, rain, result)" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="lif_ui" target="lif_db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="370" as="sourcePoint" />
+            <mxPoint x="0" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="ACK / id lịch sử" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="lif_db" target="lif_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="410" as="sourcePoint" />
+            <mxPoint x="0" y="410" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="Hiển thị dashboard &amp; khuyến nghị" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="lif_ui" target="lif_user">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="470" as="sourcePoint" />
+            <mxPoint x="0" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="SEQ_ALERTS" name="Seq 2 - Xem cảnh báo (GDACS)">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="a_user" value="User" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="100" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="a_ui" value="SafeWave UI" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="340" y="60" width="120" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="a_ipc" value="IPC Main&#10;(Electron)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="620" y="60" width="140" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="a_gdacs" value="GDACS API" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="900" y="60" width="120" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="a_db" value="SQLite DB&#10;Alerts" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="60" width="130" height="520" as="geometry" />
+        </mxCell>
+
+        <mxCell id="a1" value="Nhấn &quot;Quét cảnh báo&quot;" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="a_user" target="a_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="140" as="sourcePoint" />
+            <mxPoint x="0" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a2" value="ipcRenderer.invoke('fetch-gdacs')" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="a_ui" target="a_ipc">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="180" as="sourcePoint" />
+            <mxPoint x="0" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a3" value="GET /gdacsapi/..." style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="a_ipc" target="a_gdacs">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="220" as="sourcePoint" />
+            <mxPoint x="0" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a4" value="JSON sự kiện bão/ATNĐ" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="a_gdacs" target="a_ipc">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="260" as="sourcePoint" />
+            <mxPoint x="0" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a5" value="Lưu/ghi cụm cảnh báo" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="a_ipc" target="a_db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="300" as="sourcePoint" />
+            <mxPoint x="0" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a6" value="ACK" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="a_db" target="a_ipc">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="335" as="sourcePoint" />
+            <mxPoint x="0" y="335" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a7" value="Danh sách cảnh báo đã xử lý" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="a_ipc" target="a_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="380" as="sourcePoint" />
+            <mxPoint x="0" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a8" value="Hiển thị danh sách &amp; marker trên bản đồ" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="a_ui" target="a_user">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="430" as="sourcePoint" />
+            <mxPoint x="0" y="430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="SEQ_RAIN" name="Seq 3 - Xem mưa theo tỉnh">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="r_user" value="User" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="100" height="460" as="geometry" />
+        </mxCell>
+        <mxCell id="r_ui" value="SafeWave UI" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="340" y="60" width="120" height="460" as="geometry" />
+        </mxCell>
+        <mxCell id="r_db" value="SQLite DB&#10;Province Rain" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="700" y="60" width="150" height="460" as="geometry" />
+        </mxCell>
+
+        <mxCell id="r1" value="Chọn tỉnh trong combobox" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="r_user" target="r_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="140" as="sourcePoint" />
+            <mxPoint x="0" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r2" value="getProvinceRainHistory(province)" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="r_ui" target="r_db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="190" as="sourcePoint" />
+            <mxPoint x="0" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r3" value="Danh sách mẫu mưa gần đây" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="r_db" target="r_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="230" as="sourcePoint" />
+            <mxPoint x="0" y="230" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r4" value="getHistoricProvinceRecords(province)" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="r_ui" target="r_db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="270" as="sourcePoint" />
+            <mxPoint x="0" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r5" value="Bản ghi mưa cực đại lịch sử" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="r_db" target="r_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="310" as="sourcePoint" />
+            <mxPoint x="0" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r6" value="Hiển thị bảng mưa + ngày cực đại" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="r_ui" target="r_user">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="360" as="sourcePoint" />
+            <mxPoint x="0" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="SEQ_SHELTER" name="Seq 4 - Tìm kiếm điểm trú ẩn">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="s_user" value="User" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="100" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="s_ui" value="SafeWave UI" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="340" y="60" width="120" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="s_db" value="SQLite DB&#10;Shelters" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;" vertex="1" parent="1">
+          <mxGeometry x="700" y="60" width="150" height="480" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1" value="Mở tab Điểm trú ẩn" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="s_user" target="s_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="140" as="sourcePoint" />
+            <mxPoint x="0" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2" value="getShelters()" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="s_ui" target="s_db">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="180" as="sourcePoint" />
+            <mxPoint x="0" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s3" value="Danh sách điểm trú ẩn" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="s_db" target="s_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="220" as="sourcePoint" />
+            <mxPoint x="0" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s4" value="Chọn điểm trú / lọc theo tỉnh" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="s_user" target="s_ui">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="270" as="sourcePoint" />
+            <mxPoint x="0" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s5" value="FlyTo(shelter.lat, lon) &amp; highlight card" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" edge="1" parent="1" source="s_ui" target="s_user">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="320" as="sourcePoint" />
+            <mxPoint x="0" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+

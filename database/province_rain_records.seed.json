@@ -1,0 +1,87 @@
+[
+  {
+    "province": "Thừa Thiên Huế",
+    "location_note": "Đỉnh Bạch Mã",
+    "h24": 1739.6,
+    "recorded_at": "2025-10-27T00:00:00+07:00",
+    "source": "VnExpress International"
+  },
+  {
+    "province": "Thừa Thiên Huế",
+    "location_note": "Huế (TP)",
+    "h24": 1085.8,
+    "recorded_at": "2025-10-27T12:00:00+07:00",
+    "source": "VnExpress International"
+  },
+  {
+    "province": "Đà Nẵng",
+    "location_note": "Khu vực Đà Nẵng",
+    "h24": 600,
+    "recorded_at": "2025-10-26T00:00:00+07:00",
+    "source": "vietnam.vn"
+  },
+  {
+    "province": "Hà Tĩnh",
+    "location_note": "Trạm Kỳ Anh / Kỳ Hoa",
+    "h24": 601.4,
+    "recorded_at": "2025-05-25T00:00:00+07:00",
+    "source": "Lao Động"
+  },
+  {
+    "province": "Bình Định",
+    "location_note": "Một số trạm nội tỉnh",
+    "h24": 700,
+    "recorded_at": "2025-11-22T00:00:00+07:00",
+    "source": "Báo Tin Tức"
+  },
+  {
+    "province": "Khánh Hòa",
+    "location_note": "Các trạm khu vực",
+    "h24": 800,
+    "recorded_at": "2025-11-22T00:00:00+07:00",
+    "source": "Báo Tin Tức"
+  },
+  {
+    "province": "Khánh Hòa",
+    "location_note": "Trạm ghi nhận cực đại",
+    "h24": 1700,
+    "recorded_at": "2025-11-23T00:00:00+07:00",
+    "source": "Báo Tin Tức"
+  },
+  {
+    "province": "Đắk Lắk",
+    "location_note": "Trạm Sơn Hòa",
+    "h24": 601.2,
+    "recorded_at": "2025-11-23T00:00:00+07:00",
+    "source": "Báo Mới"
+  },
+  {
+    "province": "TP. Hồ Chí Minh",
+    "location_note": "Trạm Tân Sơn Nhất",
+    "h24": 72.5,
+    "recorded_at": "2025-02-12T00:00:00+07:00",
+    "source": "VietNamNet News"
+  },
+  {
+    "province": "Hải Phòng",
+    "location_note": "Trạm nội thành",
+    "h24": 400,
+    "recorded_at": "2025-10-25T00:00:00+07:00",
+    "source": "VnExpress International"
+  },
+  {
+    "province": "Hà Nội",
+    "location_note": "Trận mưa lịch sử 2008",
+    "h24": 500,
+    "recorded_at": "2008-11-02T00:00:00+07:00",
+    "source": "Historical reference"
+  },
+  {
+    "province": "Đà Lạt (Lâm Đồng)",
+    "location_note": "Đợt mưa lịch sử 2025",
+    "h24": 400,
+    "recorded_at": "2025-11-23T00:00:00+07:00",
+    "source": "Báo Tin Tức"
+  }
+]
+

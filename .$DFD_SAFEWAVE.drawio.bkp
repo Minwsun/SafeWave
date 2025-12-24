@@ -1,0 +1,181 @@
+<mxfile host="app.diagrams.net" modified="2025-12-15T00:00:00.000Z" agent="SafeWave" version="21.0.0" etag="dfd" type="device">
+  <diagram id="DFD_Context" name="DFD Level 0 (Context)">
+    <mxGraphModel dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- External Entity: User -->
+        <mxCell id="ctx_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="120" y="200" width="150" height="70" as="geometry" />
+        </mxCell>
+        <!-- Process: SafeWave System -->
+        <mxCell id="ctx_proc" value="P0: SafeWave System" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="700" y="180" width="260" height="120" as="geometry" />
+        </mxCell>
+        <!-- Data Store: SQLite DB -->
+        <mxCell id="ctx_db" value="D1: SQLite DB" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1300" y="200" width="180" height="80" as="geometry" />
+        </mxCell>
+        <!-- Data Store: External APIs -->
+        <mxCell id="ctx_api" value="D2: GDACS API &amp; Open-Meteo" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1300" y="320" width="220" height="80" as="geometry" />
+        </mxCell>
+        <!-- Flows -->
+        <mxCell id="f1" value="Yêu cầu phân tích / xem cảnh báo / xem mưa / tìm trú ẩn" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="ctx_user" target="ctx_proc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" value="Kết quả rủi ro, cảnh báo, mưa, trú ẩn" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="ctx_proc" target="ctx_user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" value="Đọc/ghi lịch sử, cảnh báo, mưa, shelters" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="ctx_proc" target="ctx_db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" value="Dữ liệu GDACS / thời tiết-mưa" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="ctx_api" target="ctx_proc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" value="Lưu cache/bản ghi đã xử lý" style="endArrow=classic;html=1;strokeWidth=2;dashed=1" edge="1" parent="1" source="ctx_proc" target="ctx_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="DFD_Level1" name="DFD Level 1 (Chính)">
+    <mxGraphModel dx="2000" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- External Entities -->
+        <mxCell id="l1_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="60" y="200" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_api" value="GDACS / Open-Meteo" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1440" y="120" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Data Stores -->
+        <mxCell id="l1_db_history" value="D1: Lịch sử phân tích" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1280" y="260" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_db_alerts" value="D2: Cảnh báo bão/lũ" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1280" y="360" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_db_rain" value="D3: Mưa theo tỉnh" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1280" y="460" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_db_shelter" value="D4: Điểm trú ẩn" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1280" y="560" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Processes -->
+        <mxCell id="p1" value="P1: Phân tích rủi ro" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="420" y="160" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" value="P2: Quản lý cảnh báo (GDACS)" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#d79b00;fillColor=#ffe6cc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="700" y="120" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="P3: Quản lý lịch sử" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="700" y="260" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="P4: Mưa theo tỉnh" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#d5e8d4;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="700" y="400" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" value="P5: Tìm điểm trú ẩn" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#d6b656;fillColor=#fff2cc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="700" y="540" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6" value="P6: Hạ tầng IPC &amp; DB" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="980" y="650" width="220" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- Flows: User to Processes -->
+        <mxCell id="f_l1_1" value="Chọn điểm / yêu cầu phân tích" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_user" target="p1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_2" value="Quét/Xem cảnh báo" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_user" target="p2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_3" value="Xem lịch sử / chi tiết / yêu thích / xóa" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_user" target="p3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_4" value="Chọn tỉnh, xem mưa" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_user" target="p4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_5" value="Tìm / chọn điểm trú" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_user" target="p5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Flows: Processes back to User -->
+        <mxCell id="f_l1_1b" value="Kết quả rủi ro, khuyến nghị" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="p1" target="l1_user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_2b" value="Danh sách cảnh báo / marker" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="p2" target="l1_user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_3b" value="Chi tiết lịch sử" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="p3" target="l1_user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_4b" value="Bảng mưa tỉnh, cực đại" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="p4" target="l1_user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_5b" value="Thông tin điểm trú, fly-to map" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="p5" target="l1_user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Flows: Processes to External APIs -->
+        <mxCell id="f_api_1" value="GDACS events (IPC fetch)" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_api" target="p2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_api_2" value="Open-Meteo rain/weather" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_api" target="p1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_api_3" value="Thu thập mưa tỉnh (cron)" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_api" target="p4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Flows: Processes to Data Stores -->
+        <mxCell id="f_db_hist_w" value="Ghi lịch sử" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="p1" target="l1_db_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_hist_r" value="Đọc lịch sử / chi tiết" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_db_history" target="p3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="f_db_alert_w" value="Ghi cảnh báo" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="p2" target="l1_db_alerts">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_alert_r" value="Đọc cảnh báo" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_db_alerts" target="p2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="f_db_rain_w" value="Ghi mưa tỉnh (collector)" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="p4" target="l1_db_rain">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_rain_r" value="Đọc mưa tỉnh" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_db_rain" target="p4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="f_db_shelter_r" value="Đọc shelters" style="endArrow=classic;html=1;strokeWidth=2" edge="1" parent="1" source="l1_db_shelter" target="p5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Infra -->
+        <mxCell id="f_infra_1" value="IPC calls (db, gdacs)" style="endArrow=classic;html=1;strokeWidth=2;dashed=1" edge="1" parent="1" source="p2" target="p6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_infra_2" value="IPC DB (read/write)" style="endArrow=classic;html=1;strokeWidth=2;dashed=1" edge="1" parent="1" source="p1" target="p6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_infra_3" value="IPC DB (history/alerts/rain/shelter)" style="endArrow=classic;html=1;strokeWidth=2;dashed=1" edge="1" parent="1" source="p3" target="p6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_infra_4" value="IPC DB (rain)" style="endArrow=classic;html=1;strokeWidth=2;dashed=1" edge="1" parent="1" source="p4" target="p6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_infra_5" value="IPC DB (shelter)" style="endArrow=classic;html=1;strokeWidth=2;dashed=1" edge="1" parent="1" source="p5" target="p6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+

@@ -1,0 +1,153 @@
+[
+  {
+    "name": "Trung tâm Sơ tán Đà Nẵng",
+    "province": "Đà Nẵng",
+    "address": "45 Trần Phú, Quận Hải Châu",
+    "latitude": 16.0706,
+    "longitude": 108.2241,
+    "capacity": 450,
+    "contact": "0236-3888-115",
+    "status": "Ready"
+  },
+  {
+    "name": "Nhà văn hóa Thanh Khê",
+    "province": "Đà Nẵng",
+    "address": "520 Điện Biên Phủ, Thanh Khê",
+    "latitude": 16.072,
+    "longitude": 108.1868,
+    "capacity": 320,
+    "contact": "0236-3777-446",
+    "status": "Ready"
+  },
+  {
+    "name": "Trường THCS Nguyễn Khuyến",
+    "province": "Quảng Nam",
+    "address": "27 Lê Duẩn, Hội An",
+    "latitude": 15.8794,
+    "longitude": 108.335,
+    "capacity": 280,
+    "contact": "0235-3961-002",
+    "status": "Available"
+  },
+  {
+    "name": "Nhà thi đấu đa năng Tam Kỳ",
+    "province": "Quảng Nam",
+    "address": "65 Hùng Vương, Tam Kỳ",
+    "latitude": 15.5739,
+    "longitude": 108.474,
+    "capacity": 400,
+    "contact": "0235-3822-885",
+    "status": "Ready"
+  },
+  {
+    "name": "Trung tâm Văn hóa tỉnh Quảng Ngãi",
+    "province": "Quảng Ngãi",
+    "address": "05 Hai Bà Trưng, TP Quảng Ngãi",
+    "latitude": 15.1205,
+    "longitude": 108.7922,
+    "capacity": 350,
+    "contact": "0255-3825-222",
+    "status": "Ready"
+  },
+  {
+    "name": "Trường THPT Lê Quý Đôn",
+    "province": "Quảng Ngãi",
+    "address": "66 Phan Đình Phùng, TP Quảng Ngãi",
+    "latitude": 15.1217,
+    "longitude": 108.798,
+    "capacity": 250,
+    "contact": "0255-3821-189",
+    "status": "Available"
+  },
+  {
+    "name": "Nhà thi đấu Thừa Thiên Huế",
+    "province": "Thừa Thiên Huế",
+    "address": "12 Lê Lợi, TP Huế",
+    "latitude": 16.4637,
+    "longitude": 107.5909,
+    "capacity": 500,
+    "contact": "0234-3567-999",
+    "status": "Ready"
+  },
+  {
+    "name": "Trung tâm Hội nghị tỉnh Huế",
+    "province": "Thừa Thiên Huế",
+    "address": "22 Lâm Hoằng, TP Huế",
+    "latitude": 16.4648,
+    "longitude": 107.5855,
+    "capacity": 280,
+    "contact": "0234-3822-468",
+    "status": "Available"
+  },
+  {
+    "name": "Nhà văn hóa Lao Bảo",
+    "province": "Quảng Trị",
+    "address": "QL9, Thị trấn Lao Bảo, Hướng Hóa",
+    "latitude": 16.6225,
+    "longitude": 106.5985,
+    "capacity": 220,
+    "contact": "0233-3855-115",
+    "status": "Available"
+  },
+  {
+    "name": "Trung tâm Văn hóa Đồng Hới",
+    "province": "Quảng Bình",
+    "address": "76 Hữu Nghị, TP Đồng Hới",
+    "latitude": 17.4785,
+    "longitude": 106.6223,
+    "capacity": 350,
+    "contact": "0232-3824-135",
+    "status": "Ready"
+  },
+  {
+    "name": "Nhà thi đấu Phan Đình Phùng",
+    "province": "Nghệ An",
+    "address": "32 Nguyễn Đức Cảnh, TP Vinh",
+    "latitude": 18.6755,
+    "longitude": 105.6912,
+    "capacity": 600,
+    "contact": "0238-3855-333",
+    "status": "Ready"
+  },
+  {
+    "name": "Trung tâm Thể thao Hà Tĩnh",
+    "province": "Hà Tĩnh",
+    "address": "15 Phan Đình Phùng, TP Hà Tĩnh",
+    "latitude": 18.3428,
+    "longitude": 105.9057,
+    "capacity": 420,
+    "contact": "0239-3855-779",
+    "status": "Ready"
+  },
+  {
+    "name": "Nhà thi đấu Khánh Hòa",
+    "province": "Khánh Hòa",
+    "address": "33 Yersin, Nha Trang",
+    "latitude": 12.2453,
+    "longitude": 109.1943,
+    "capacity": 500,
+    "contact": "0258-3561-115",
+    "status": "Available"
+  },
+  {
+    "name": "Trung tâm Văn hóa Cam Ranh",
+    "province": "Khánh Hòa",
+    "address": "09 Trần Hưng Đạo, Cam Ranh",
+    "latitude": 11.9076,
+    "longitude": 109.1345,
+    "capacity": 260,
+    "contact": "0258-3952-668",
+    "status": "Limited"
+  },
+  {
+    "name": "Nhà văn hóa Tuy Hòa",
+    "province": "Phú Yên",
+    "address": "03 Lê Trung Kiên, TP Tuy Hòa",
+    "latitude": 13.0878,
+    "longitude": 109.3115,
+    "capacity": 280,
+    "contact": "0257-3822-501",
+    "status": "Available"
+  }
+]
+

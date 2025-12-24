@@ -1,0 +1,440 @@
+<mxfile host="Electron" modified="2025-12-15T18:26:44.266Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.4.0 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="k2xHIcud9oeGuf8P1uq0" version="24.4.0" type="device" pages="8">
+  <diagram id="DFD_Context" name="DFD Level 0 (Context)">
+    <mxGraphModel dx="1668" dy="1021" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ctx_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="120" y="200" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ctx_proc" value="P0: SafeWave System" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="700" y="180" width="260" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ctx_db" value="D1: SQLite DB" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1170" y="210" width="180" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ctx_api" value="D2: GDACS API &amp; Open-Meteo" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="720" y="500" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="f1" value="Yêu cầu phân tích / xem cảnh báo / xem mưa / tìm trú ẩn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="ctx_user" target="ctx_proc" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="490" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f2" value="Kết quả rủi ro, cảnh báo, mưa, trú ẩn" style="endArrow=classic;html=1;strokeWidth=2;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="ctx_proc" target="ctx_user" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f3" value="Đọc/ghi lịch sử, cảnh báo, mưa, shelters" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="ctx_proc" target="ctx_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" value="Dữ liệu GDACS / thời tiết-mưa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="ctx_api" target="ctx_proc" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" value="Lưu cache/bản ghi đã xử lý" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;dashed=1;labelBackgroundColor=#ffffff" parent="1" source="ctx_proc" target="ctx_api" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="DFD_Level1" name="DFD Level 1 (Chính)">
+    <mxGraphModel dx="4668" dy="3168" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="l1_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="60" y="200" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_api" value="GDACS / Open-Meteo" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1290" y="130" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_db_history" value="D1: Lịch sử phân tích" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1300" y="-170" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_db_alerts" value="D2: Cảnh báo bão/lũ" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1310" y="-30" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_db_rain" value="D3: Mưa theo tỉnh" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1290" y="400" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="l1_db_shelter" value="D4: Điểm trú ẩn" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="1280" y="610" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" value="P1: Phân tích rủi ro" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="760" y="-270" width="200" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" value="P2: Quản lý cảnh báo (GDACS)" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#d79b00;fillColor=#ffe6cc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="930" y="-40" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" value="P3: Quản lý lịch sử" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#9673a6;fillColor=#e1d5e7;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="570" y="-175" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" value="P4: Mưa theo tỉnh" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#82b366;fillColor=#d5e8d4;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="740" y="300" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" value="P5: Tìm điểm trú ẩn" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#d6b656;fillColor=#fff2cc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="700" y="610" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p6" value="P6: Hạ tầng IPC &amp; DB" style="shape=ellipse;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#f8cecc;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="-160" y="-420" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_1" value="Chọn điểm / yêu cầu phân tích" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_user" target="p1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_user" target="p2" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1040" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="6sGB5o7Yl9p1xZME1oQH-3" value="Quét/Xem cảnh báo" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="f_l1_2" connectable="0" vertex="1">
+          <mxGeometry x="-0.8253" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_l1_3" value="Xem lịch sử / chi tiết / yêu thích / xóa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_user" target="p3" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="220" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_l1_4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="l1_user" target="p4" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="140" />
+              <mxPoint x="840" y="140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="6sGB5o7Yl9p1xZME1oQH-2" value="Chọn tỉnh, xem mưa" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="f_l1_4" connectable="0" vertex="1">
+          <mxGeometry x="-0.4154" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_l1_5" value="Tìm / chọn điểm trú" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_user" target="p5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="450" />
+              <mxPoint x="800" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_l1_1b" value="Kết quả rủi ro, khuyến nghị" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="p1" target="l1_user" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_2b" value="Danh sách cảnh báo / marker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="p2" target="l1_user" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_3b" value="Chi tiết lịch sử" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="p3" target="l1_user" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_4b" value="Bảng mưa tỉnh, cực đại" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="p4" target="l1_user" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_l1_5b" value="Thông tin điểm trú, fly-to map" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="p5" target="l1_user" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_api_1" value="GDACS events (IPC fetch)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_api" target="p2" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1060" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_api_2" value="Open-Meteo rain/weather" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_api" target="p1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_api_3" value="Thu thập mưa tỉnh (cron)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="l1_api" target="p4" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1420" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_db_hist_w" value="Ghi lịch sử" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="p1" target="l1_db_history" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_hist_r" value="Đọc lịch sử / chi tiết" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_db_history" target="p3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_alert_w" value="Ghi cảnh báo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="p2" target="l1_db_alerts" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_alert_r" value="Đọc cảnh báo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_db_alerts" target="p2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_rain_w" value="Ghi mưa tỉnh (collector)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="p4" target="l1_db_rain" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_rain_r" value="Đọc mưa tỉnh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_db_rain" target="p4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_db_shelter_r" value="Đọc shelters" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="1" source="l1_db_shelter" target="p5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_infra_1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;dashed=1;labelBackgroundColor=#ffffff" parent="1" source="p2" target="p6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6sGB5o7Yl9p1xZME1oQH-7" value="IPC calls (db, gdacs)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="f_infra_1" connectable="0" vertex="1">
+          <mxGeometry x="0.5283" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_infra_2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;dashed=1;labelBackgroundColor=#ffffff" parent="1" source="p1" target="p6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6sGB5o7Yl9p1xZME1oQH-4" value="IPC DB (read/write)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="f_infra_2" connectable="0" vertex="1">
+          <mxGeometry x="0.6595" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_infra_3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;dashed=1;labelBackgroundColor=#ffffff" parent="1" source="p3" target="p6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6sGB5o7Yl9p1xZME1oQH-5" value="IPC DB (history/alerts/rain/shelter)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="f_infra_3" connectable="0" vertex="1">
+          <mxGeometry x="0.4944" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_infra_4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;dashed=1;labelBackgroundColor=#ffffff" parent="1" source="p4" target="p6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="6sGB5o7Yl9p1xZME1oQH-9" value="IPC DB (rain)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="f_infra_4" connectable="0" vertex="1">
+          <mxGeometry x="0.226" y="-4" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_infra_5" value="IPC DB (shelter)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;endArrow=classic;html=1;strokeWidth=2;dashed=1;labelBackgroundColor=#ffffff;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="p5" target="p6" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="750" />
+              <mxPoint x="-50" y="750" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="DFD_UF1" name="DFD UF1 - Phân tích rủi ro">
+    <mxGraphModel dx="1434" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="uf1_root" />
+        <mxCell id="uf1_layer" parent="uf1_root" />
+        <mxCell id="uf1_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" parent="uf1_layer" vertex="1">
+          <mxGeometry x="80" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf1_p" value="1.0&#xa;Phân tích rủi ro vị trí" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;strokeColor=#ff9900;fillColor=#ffe6cc;fontStyle=1" parent="uf1_layer" vertex="1">
+          <mxGeometry x="420" y="250" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uf1_store" value="D1&#xa;Lịch sử phân tích" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="uf1_layer" vertex="1">
+          <mxGeometry x="800" y="260" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf1_req" value="Yêu cầu phân tích vị trí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf1_layer" source="uf1_user" target="uf1_p" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="170" />
+              <mxPoint x="550" y="170" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf1_res" value="Kết quả rủi ro &amp; khuyến nghị" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf1_layer" source="uf1_p" target="uf1_user" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="420" />
+              <mxPoint x="150" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf1_dbflow" value="Tạo/Cập nhật lịch sử" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf1_layer" source="uf1_p" target="uf1_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="DFD_UF2" name="DFD UF2 - Xem cảnh báo">
+    <mxGraphModel dx="1434" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="uf2_root" />
+        <mxCell id="uf2_layer" parent="uf2_root" />
+        <mxCell id="uf2_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" parent="uf2_layer" vertex="1">
+          <mxGeometry x="80" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf2_p" value="2.0&#xa;Xem cảnh báo bão/lũ" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;strokeColor=#ff9900;fillColor=#ffe6cc;fontStyle=1" parent="uf2_layer" vertex="1">
+          <mxGeometry x="420" y="250" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uf2_store" value="D2&#xa;Cảnh báo bão/lũ" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="uf2_layer" vertex="1">
+          <mxGeometry x="800" y="260" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf2_req" value="Yêu cầu quét / xem cảnh báo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf2_layer" source="uf2_user" target="uf2_p" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="180" />
+              <mxPoint x="550" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf2_res" value="Danh sách cảnh báo &amp; marker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf2_layer" source="uf2_p" target="uf2_user" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="420" />
+              <mxPoint x="150" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf2_dbflow" value="Tạo/Cập nhật cảnh báo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf2_layer" source="uf2_p" target="uf2_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="DFD_UF3" name="DFD UF3 - Lịch sử rủi ro">
+    <mxGraphModel dx="1434" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="uf3_root" />
+        <mxCell id="uf3_layer" parent="uf3_root" />
+        <mxCell id="uf3_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" parent="uf3_layer" vertex="1">
+          <mxGeometry x="80" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf3_p" value="3.0&#xa;Quản lý lịch sử rủi ro" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;strokeColor=#ff9900;fillColor=#ffe6cc;fontStyle=1" parent="uf3_layer" vertex="1">
+          <mxGeometry x="420" y="250" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uf3_store" value="D1&#xa;Lịch sử phân tích" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="uf3_layer" vertex="1">
+          <mxGeometry x="820" y="260" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf3_req" value="Yêu cầu xem / thao tác lịch sử" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf3_layer" source="uf3_user" target="uf3_p" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="190" />
+              <mxPoint x="560" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf3_res" value="Danh sách &amp; chi tiết lịch sử" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf3_layer" source="uf3_p" target="uf3_user" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="400" />
+              <mxPoint x="150" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf3_dbflow" value="Đọc/Cập nhật lịch sử" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf3_layer" source="uf3_p" target="uf3_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="DFD_UF4" name="DFD UF4 - Mưa theo tỉnh">
+    <mxGraphModel dx="1434" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="uf4_root" />
+        <mxCell id="uf4_layer" parent="uf4_root" />
+        <mxCell id="uf4_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" parent="uf4_layer" vertex="1">
+          <mxGeometry x="80" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf4_p" value="4.0&#xa;Xem mưa theo tỉnh" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;strokeColor=#ff9900;fillColor=#ffe6cc;fontStyle=1" parent="uf4_layer" vertex="1">
+          <mxGeometry x="420" y="250" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uf4_store" value="D3&#xa;Mưa theo tỉnh" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="uf4_layer" vertex="1">
+          <mxGeometry x="800" y="260" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf4_req" value="Chọn tỉnh / xem mưa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf4_layer" source="uf4_user" target="uf4_p" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="180" />
+              <mxPoint x="550" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf4_res" value="Bảng mưa hiện tại &amp; cực đại" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf4_layer" source="uf4_p" target="uf4_user" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="420" />
+              <mxPoint x="150" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf4_dbflow" value="Đọc thống kê mưa tỉnh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf4_layer" source="uf4_p" target="uf4_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="DFD_UF5" name="DFD UF5 - Điểm trú ẩn">
+    <mxGraphModel dx="1434" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="uf5_root" />
+        <mxCell id="uf5_layer" parent="uf5_root" />
+        <mxCell id="uf5_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" parent="uf5_layer" vertex="1">
+          <mxGeometry x="80" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf5_p" value="5.0&#xa;Tìm kiếm điểm trú ẩn" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;strokeColor=#ff9900;fillColor=#ffe6cc;fontStyle=1" parent="uf5_layer" vertex="1">
+          <mxGeometry x="420" y="250" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uf5_store" value="D4&#xa;Điểm trú ẩn" style="shape=datastore;whiteSpace=wrap;html=1;strokeColor=#b85450;fillColor=#ffe6cc;fontStyle=1" parent="uf5_layer" vertex="1">
+          <mxGeometry x="830" y="260" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf5_req" value="Lọc / chọn điểm trú ẩn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf5_layer" source="uf5_user" target="uf5_p" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="170" />
+              <mxPoint x="560" y="170" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf5_res" value="Thông tin điểm trú &amp; điều khiển map" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf5_layer" source="uf5_p" target="uf5_user" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="400" />
+              <mxPoint x="150" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf5_dbflow" value="Đọc danh sách điểm trú" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf5_layer" source="uf5_p" target="uf5_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="DFD_UF6" name="DFD UF6 - Radar Windy">
+    <mxGraphModel dx="1434" dy="884" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="uf6_root" />
+        <mxCell id="uf6_layer" parent="uf6_root" />
+        <mxCell id="uf6_user" value="User" style="shape=rectangle;rounded=0;whiteSpace=wrap;html=1;strokeColor=#000000;fillColor=#f5f5f5;fontStyle=1" parent="uf6_layer" vertex="1">
+          <mxGeometry x="80" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uf6_p" value="6.0&#xa;Bật/Tắt radar Windy" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;strokeColor=#ff9900;fillColor=#ffe6cc;fontStyle=1" parent="uf6_layer" vertex="1">
+          <mxGeometry x="420" y="250" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="uf6_req" value="Bật/Tắt lớp radar Windy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf6_layer" source="uf6_user" target="uf6_p" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="190" />
+              <mxPoint x="550" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="uf6_res" value="Trạng thái hiển thị radar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;jettySize=auto;orthogonalLoop=1;endArrow=classic;html=1;strokeWidth=2;labelBackgroundColor=#ffffff" parent="uf6_layer" source="uf6_p" target="uf6_user" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="400" />
+              <mxPoint x="150" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

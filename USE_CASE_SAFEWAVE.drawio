@@ -1,0 +1,202 @@
+<mxfile host="Electron" modified="2025-12-15T07:49:10.296Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.4.0 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="LzdkIfQktNgyMOUH7BuO" version="24.4.0" type="device">
+  <diagram id="UseCases" name="2. Use Case Diagram">
+    <mxGraphModel dx="2068" dy="1421" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="actor_user" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-40" y="255" width="60" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_analyze" value="Phân tích rủi ro vị trí" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="260" y="110" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_select_point" value="Chọn điểm trên bản đồ" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#6c8ebf;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="50" y="25" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_fetch_weather" value="Lấy dữ liệu thời tiết &amp; mưa" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#6c8ebf;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="170" y="-30" width="190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_compute_risk" value="Tính điểm rủi ro &amp; khuyến nghị" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#6c8ebf;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="420" y="210" width="210" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_save_history" value="Lưu lịch sử phân tích" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#6c8ebf;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="230" y="240" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_alerts" value="Theo dõi cảnh báo bão/lũ" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="550" y="75" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_alert_list" value="Xem danh sách cảnh báo" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#d79b00;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="560" y="-25" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_focus_alert" value="Trỏ bản đồ tới điểm cảnh báo" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#d79b00;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="530" y="-110" width="190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_manual_scan" value="Quét GDACS thủ công" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#d79b00;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="840" y="-30" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_history" value="Quản lý lịch sử rủi ro" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeWidth=2;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="580" y="290" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_history_detail" value="Xem chi tiết lịch sử" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#9673a6;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="600" y="390" width="170" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_favorite" value="Đánh dấu yêu thích" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#9673a6;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="750" y="460" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_delete_history" value="Xóa mục lịch sử" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#9673a6;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="470" y="450" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_rain_province" value="Xem mưa theo tỉnh" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="260" y="500" width="190" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_select_province" value="Chọn tỉnh &amp; tự trỏ bản đồ" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#82b366;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="40" y="660" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_rain_stats" value="Xem mưa hiện tại &amp; cực đại" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#82b366;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="280" y="670" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_shelters" value="Tìm kiếm điểm trú ẩn" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeWidth=2;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="525" y="530" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_filter_shelter" value="Lọc theo tỉnh" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#d6b656;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="800" y="680" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_focus_shelter" value="Trỏ bản đồ tới điểm trú" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#d6b656;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="600" y="680" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_shelter_info" value="Xem thông tin liên hệ" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#d6b656;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="950" y="650" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_windy" value="Bật lớp radar Windy" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#999999;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="-60" y="120" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_risk_engine" value="Phục vụ tính toán rủi ro" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeWidth=2;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="920" y="170" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_gdacs" value="Lấy dữ liệu GDACS (IPC)" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#b85450;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="1180" y="40" width="190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_alert_store" value="Phân cụm &amp; lưu cảnh báo" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#b85450;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="1130" y="130" width="190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_rain_collector" value="Thu thập mưa theo tỉnh (3h/lần)" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#b85450;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="1130" y="290" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_db" value="Lưu trữ/đọc DB qua IPC" style="ellipse;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;strokeColor=#b85450;dashed=1" parent="1" vertex="1">
+          <mxGeometry x="990" y="450" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_user_analyze" value="" style="endArrow=none;html=1;" parent="1" source="actor_user" target="uc_analyze" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_user_alerts" value="" style="endArrow=none;html=1;" parent="1" source="actor_user" target="uc_alerts" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_user_history" value="" style="endArrow=none;html=1;" parent="1" source="actor_user" target="uc_history" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_user_rain" value="" style="endArrow=none;html=1;" parent="1" source="actor_user" target="uc_rain_province" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_user_shelters" value="" style="endArrow=none;html=1;" parent="1" source="actor_user" target="uc_shelters" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_user_windy" value="" style="endArrow=none;html=1;" parent="1" source="actor_user" target="uc_windy" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_system_risk" value="" style="endArrow=none;html=1;" parent="1" source="actor_system" target="uc_risk_engine" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_system_gdacs" value="" style="endArrow=none;html=1;" parent="1" source="actor_system" target="uc_gdacs" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_system_alert_store" value="" style="endArrow=none;html=1;" parent="1" source="actor_system" target="uc_alert_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_system_rain" value="" style="endArrow=none;html=1;" parent="1" source="actor_system" target="uc_rain_collector" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_system_db" value="" style="endArrow=none;html=1;" parent="1" source="actor_system" target="uc_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_select_point" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#6c8ebf;" parent="1" source="uc_analyze" target="uc_select_point" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_fetch_weather" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#6c8ebf;" parent="1" source="uc_analyze" target="uc_fetch_weather" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_compute_risk" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#6c8ebf;" parent="1" source="uc_analyze" target="uc_compute_risk" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_save_history" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#6c8ebf;" parent="1" source="uc_analyze" target="uc_save_history" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_alert_list" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#d79b00;" parent="1" source="uc_alerts" target="uc_view_alert_list" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_alert_focus" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#d79b00;" parent="1" source="uc_focus_alert" target="uc_view_alert_list" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_manual_scan" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#d79b00;" parent="1" source="uc_alerts" target="uc_manual_scan" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_history_detail" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673a6;" parent="1" source="uc_history" target="uc_history_detail" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_favorite" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673a6;" parent="1" source="uc_favorite" target="uc_history_detail" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_delete" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673a6;" parent="1" source="uc_delete_history" target="uc_history_detail" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_rain_select" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#82b366;" parent="1" source="uc_rain_province" target="uc_select_province" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_rain_stats" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#82b366;" parent="1" source="uc_rain_province" target="uc_view_rain_stats" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_shelter_filter" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#d6b656;" parent="1" source="uc_shelters" target="uc_filter_shelter" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_shelter_focus" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#d6b656;" parent="1" source="uc_shelters" target="uc_focus_shelter" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_shelter_info" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#d6b656;" parent="1" source="uc_shelters" target="uc_view_shelter_info" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_windy" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#999999;" parent="1" source="uc_windy" target="uc_analyze" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_compute_risk_engine" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_compute_risk" target="uc_risk_engine" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_manual_scan_gdacs" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_manual_scan" target="uc_gdacs" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_alert_store" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_manual_scan" target="uc_alert_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_fetch_weather_db" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_fetch_weather" target="uc_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_save_history_db" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_save_history" target="uc_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_history_detail_db" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_history_detail" target="uc_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_rain_stats_db" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_view_rain_stats" target="uc_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_shelter_db" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_view_shelter_info" target="uc_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_rain_collector_db" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#b85450;" parent="1" source="uc_rain_collector" target="uc_db" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_system" value="Hệ thống SafeWave" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;" parent="1" vertex="1">
+          <mxGeometry x="1510" y="255" width="60" height="120" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
